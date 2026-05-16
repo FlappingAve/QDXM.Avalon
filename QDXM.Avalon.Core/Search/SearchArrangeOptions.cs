@@ -22,6 +22,7 @@ public static class SearchArrangeOptions
     private static readonly IReadOnlyList<SearchArrangeOption> PlaylistOptions =
     [
         SearchArrangeOption.Unarranged,
+        SearchArrangeOption.LastUpdated,
         SearchArrangeOption.Name,
         SearchArrangeOption.TotalTracks
     ];

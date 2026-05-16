@@ -12,6 +12,7 @@ public static class SearchResultViewArranger
         var arranged = arrangeBy switch
         {
             SearchArrangeOption.ReleaseDate => results.OrderByDescending(result => result.ReleaseDate),
+            SearchArrangeOption.LastUpdated => results.OrderByDescending(result => result.ReleaseDate),
             SearchArrangeOption.Quality => results.OrderByDescending(result => SearchQualityRanker.Rank(result.Quality)),
             SearchArrangeOption.Name => results.OrderBy(result => result.Title, StringComparer.OrdinalIgnoreCase),
             SearchArrangeOption.TotalTracks => results.OrderByDescending(result => result.TotalTracks),

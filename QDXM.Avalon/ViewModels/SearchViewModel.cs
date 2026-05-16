@@ -25,6 +25,7 @@ public partial class SearchViewModel : ViewModelBase
     private const string RelevanceSort = "Relevance";
     private const string UnarrangedArrange = "Unarranged";
     private const string ReleaseDateArrange = "Release Date";
+    private const string LastUpdatedArrange = "Last Updated";
     private const string QualityArrange = "Quality";
     private const string NameArrange = "Name";
     private const string TotalTracksArrange = "Track Count";
@@ -762,6 +763,7 @@ public partial class SearchViewModel : ViewModelBase
         var label = option switch
         {
             SearchArrangeOption.ReleaseDate => ReleaseDateArrange,
+            SearchArrangeOption.LastUpdated => LastUpdatedArrange,
             SearchArrangeOption.Quality => QualityArrange,
             SearchArrangeOption.Name => NameArrange,
             SearchArrangeOption.TotalTracks => TotalTracksArrange,

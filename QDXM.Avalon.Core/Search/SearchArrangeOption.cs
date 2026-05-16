@@ -4,6 +4,7 @@ public enum SearchArrangeOption
 {
     Unarranged,
     ReleaseDate,
+    LastUpdated,
     Quality,
     Name,
     TotalTracks,

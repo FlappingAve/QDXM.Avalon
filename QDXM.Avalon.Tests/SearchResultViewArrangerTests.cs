@@ -59,16 +59,35 @@ public sealed class SearchResultViewArrangerTests
         Assert.Equal(["Large", "Medium", "Small"], arranged.Select(result => result.Title));
     }
 
+    [Fact]
+    public void Arrange_SortsPlaylistsByLastUpdated()
+    {
+        var results = new[]
+        {
+            CreateResult("Older", releaseDate: "2024-01-01"),
+            CreateResult("Newest", releaseDate: "2024-03-01"),
+            CreateResult("Middle", releaseDate: "2024-02-01")
+        };
+
+        var arranged = SearchResultViewArranger.Arrange(
+            results,
+            SearchArrangeOption.LastUpdated);
+
+        Assert.Equal(["Newest", "Middle", "Older"], arranged.Select(result => result.Title));
+    }
+
     private static SearchResultViewModel CreateResult(
         string title,
         string quality = "",
-        int totalAlbums = 0)
+        int totalAlbums = 0,
+        string releaseDate = "")
     {
         return new SearchResultViewModel((_, _) => { })
         {
             Title = title,
             Quality = quality,
-            TotalAlbums = totalAlbums
+            TotalAlbums = totalAlbums,
+            ReleaseDate = releaseDate
         };
     }
 }

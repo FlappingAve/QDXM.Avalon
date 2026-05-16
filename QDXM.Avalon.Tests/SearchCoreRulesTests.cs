@@ -119,7 +119,7 @@ public sealed class SearchCoreRulesTests
     [Theory]
     [InlineData(SearchResultType.Albums, new[] { SearchArrangeOption.Unarranged, SearchArrangeOption.ReleaseDate, SearchArrangeOption.Quality, SearchArrangeOption.Name, SearchArrangeOption.TotalTracks })]
     [InlineData(SearchResultType.Tracks, new[] { SearchArrangeOption.Unarranged, SearchArrangeOption.ReleaseDate, SearchArrangeOption.Quality, SearchArrangeOption.Name })]
-    [InlineData(SearchResultType.Playlists, new[] { SearchArrangeOption.Unarranged, SearchArrangeOption.Name, SearchArrangeOption.TotalTracks })]
+    [InlineData(SearchResultType.Playlists, new[] { SearchArrangeOption.Unarranged, SearchArrangeOption.LastUpdated, SearchArrangeOption.Name, SearchArrangeOption.TotalTracks })]
     [InlineData(SearchResultType.Artist, new[] { SearchArrangeOption.Unarranged, SearchArrangeOption.Name, SearchArrangeOption.TotalAlbums })]
     [InlineData(SearchResultType.Label, new[] { SearchArrangeOption.Unarranged, SearchArrangeOption.Name, SearchArrangeOption.TotalAlbums })]
     [InlineData(SearchResultType.ArtistAlbums, new[] { SearchArrangeOption.Unarranged, SearchArrangeOption.ReleaseDate, SearchArrangeOption.Quality, SearchArrangeOption.Name, SearchArrangeOption.TotalTracks })]

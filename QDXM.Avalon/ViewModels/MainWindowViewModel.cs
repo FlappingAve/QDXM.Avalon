@@ -136,8 +136,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public string VersionText { get; } =
         Assembly.GetExecutingAssembly()
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-            ?.InformationalVersion ?? "1.0.0.0";
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()!
+            .InformationalVersion;
 
     public ViewModelBase CurrentPage => SelectedPage switch
     {

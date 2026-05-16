@@ -104,6 +104,10 @@ public sealed class SearchViewModelTests
 
         Assert.Equal(SearchArrangeOption.Unarranged, viewModel.SelectedArrangeBy?.Value);
         Assert.Equal(["Unarranged", "Name", "Album Count"], viewModel.ArrangeByOptions.Select(option => option.Label));
+
+        viewModel.SelectedType = "Playlists";
+
+        Assert.Equal(["Unarranged", "Last Updated", "Name", "Track Count"], viewModel.ArrangeByOptions.Select(option => option.Label));
     }
 
     [Fact]

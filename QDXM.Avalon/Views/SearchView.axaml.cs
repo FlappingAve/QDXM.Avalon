@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using System.ComponentModel;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -27,6 +28,11 @@ public partial class SearchView : UserControl
     private static readonly AttachedProperty<IDisposable?> StickyHeaderSubscriptionProperty =
         AvaloniaProperty.RegisterAttached<ScrollViewer, IDisposable?>(
             "StickyHeaderSubscription",
+            typeof(SearchView));
+
+    private static readonly AttachedProperty<IDisposable?> TrackPageResetSubscriptionProperty =
+        AvaloniaProperty.RegisterAttached<ScrollViewer, IDisposable?>(
+            "TrackPageResetSubscription",
             typeof(SearchView));
 
     public SearchView()
@@ -243,6 +249,8 @@ public partial class SearchView : UserControl
             .GetObservable(ScrollViewer.OffsetProperty)
             .Subscribe(new AnonymousObserver<Vector>(_ => UpdateStickyExpandedTrackHeader(scrollViewer)));
         scrollViewer.SetValue(StickyHeaderSubscriptionProperty, subscription);
+        scrollViewer.DataContextChanged += ExpandedTracksScroll_OnDataContextChanged;
+        UpdateTrackPageResetSubscription(scrollViewer);
         Dispatcher.UIThread.Post(
             () => UpdateStickyExpandedTrackHeader(scrollViewer),
             DispatcherPriority.Background);
@@ -257,6 +265,17 @@ public partial class SearchView : UserControl
 
         scrollViewer.GetValue(StickyHeaderSubscriptionProperty)?.Dispose();
         scrollViewer.SetValue(StickyHeaderSubscriptionProperty, null);
+        scrollViewer.DataContextChanged -= ExpandedTracksScroll_OnDataContextChanged;
+        scrollViewer.GetValue(TrackPageResetSubscriptionProperty)?.Dispose();
+        scrollViewer.SetValue(TrackPageResetSubscriptionProperty, null);
+    }
+
+    private void ExpandedTracksScroll_OnDataContextChanged(object? sender, EventArgs e)
+    {
+        if (sender is ScrollViewer scrollViewer)
+        {
+            UpdateTrackPageResetSubscription(scrollViewer);
+        }
     }
 
     private void SearchResultsScrollViewer_OnSizeChanged(object? sender, SizeChangedEventArgs e)
@@ -348,6 +367,47 @@ public partial class SearchView : UserControl
         var maxOffsetY = Math.Max(0, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
         var nextOffsetY = Math.Clamp(scrollViewer.Offset.Y + deltaY, 0, maxOffsetY);
         scrollViewer.Offset = new Vector(scrollViewer.Offset.X, nextOffsetY);
+    }
+
+    private void UpdateTrackPageResetSubscription(ScrollViewer scrollViewer)
+    {
+        scrollViewer.GetValue(TrackPageResetSubscriptionProperty)?.Dispose();
+        scrollViewer.SetValue(TrackPageResetSubscriptionProperty, null);
+
+        if (scrollViewer.DataContext is not SearchResultViewModel result)
+        {
+            return;
+        }
+
+        PropertyChangedEventHandler handler = (_, e) =>
+        {
+            if (e.PropertyName == nameof(SearchResultViewModel.TrackPageIndex))
+            {
+                ScheduleExpandedTracksScrollToTop(scrollViewer);
+            }
+        };
+
+        result.PropertyChanged += handler;
+        scrollViewer.SetValue(
+            TrackPageResetSubscriptionProperty,
+            new ActionDisposable(() => result.PropertyChanged -= handler));
+    }
+
+    private void ScheduleExpandedTracksScrollToTop(ScrollViewer scrollViewer)
+    {
+        ResetExpandedTracksScrollToTop(scrollViewer);
+        Dispatcher.UIThread.Post(
+            () => ResetExpandedTracksScrollToTop(scrollViewer),
+            DispatcherPriority.Loaded);
+        Dispatcher.UIThread.Post(
+            () => ResetExpandedTracksScrollToTop(scrollViewer),
+            DispatcherPriority.Render);
+    }
+
+    private static void ResetExpandedTracksScrollToTop(ScrollViewer scrollViewer)
+    {
+        scrollViewer.Offset = new Vector(scrollViewer.Offset.X, 0);
+        UpdateStickyExpandedTrackHeader(scrollViewer);
     }
 
     private int? GetKeyboardRevealIndex(Key key)
@@ -509,5 +569,17 @@ public partial class SearchView : UserControl
     {
         return DataContext is SearchViewModel viewModel &&
             ReferenceEquals(viewModel.SelectedResult, result);
+    }
+
+    private sealed class ActionDisposable(Action dispose) : IDisposable
+    {
+        private Action? disposeAction = dispose;
+
+        public void Dispose()
+        {
+            var action = disposeAction;
+            disposeAction = null;
+            action?.Invoke();
+        }
     }
 }
