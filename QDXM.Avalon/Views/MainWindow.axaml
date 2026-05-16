@@ -1,0 +1,251 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ic="using:FluentIcons.Avalonia"
+        xmlns:vm="using:QDXM.Avalon.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        d:DesignWidth="1600"
+        d:DesignHeight="900"
+        x:Class="QDXM.Avalon.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        x:CompileBindings="False"
+        Icon="/Assets/qdxm-avalon.ico"
+        Title="QDXM Avalon"
+        Width="1600"
+        Height="900"
+        CanResize="True"
+        Background="{DynamicResource AppSurfaceBrush}"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="56"
+        WindowDecorations="Full"
+        KeyDown="Window_OnKeyDown">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="56,*,52">
+        <Border Grid.Row="0"
+                Background="{DynamicResource TitleSurfaceBrush}"
+                BorderBrush="{DynamicResource BorderSubtleBrush}"
+                BorderThickness="0,0,0,1"
+                WindowDecorationProperties.ElementRole="TitleBar">
+            <Grid ColumnDefinitions="Auto,Auto,*" Margin="16,0,150,0">
+                <TextBlock Grid.Column="0"
+                           Text="QDXM Avalon"
+                           FontSize="22"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource TextPrimaryBrush}"
+                           VerticalAlignment="Center"
+                           Margin="0,0,16,0" />
+                <TextBlock Grid.Column="1"
+                           Text="{Binding VersionText}"
+                           Margin="22,4,0,0"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextMutedBrush}"
+                           FontSize="14" />
+
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <ContentControl IsVisible="{Binding IsLoginSelected}"
+                            Content="{Binding Login}" />
+
+            <Grid IsVisible="{Binding IsShellVisible}" ColumnDefinitions="144,*">
+            <Border Grid.Column="0"
+                    Background="{DynamicResource SidebarSurfaceBrush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}"
+                    BorderThickness="0,0,1,0">
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" Margin="8,78,8,16">
+                    <Button Grid.Row="0"
+                            Classes="nav"
+                            Command="{Binding ShowDownloadsCommand}"
+                            Tag="{Binding IsDownloadsSelected}">
+                        <Grid ColumnDefinitions="4,36,*">
+                            <Border Grid.Column="0"
+                                    Width="4"
+                                    CornerRadius="2"
+                                    Background="{DynamicResource AccentBlueBrush}"
+                                    IsVisible="{Binding IsDownloadsSelected}" />
+                            <ic:FluentIcon Grid.Column="1"
+                                           Icon="ArrowDownload"
+                                           IconVariant="Regular"
+                                           IconSize="Size24"
+                                           FontSize="20"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2"
+                                       Text="Downloads"
+                                       VerticalAlignment="Center"
+                                       FontWeight="Medium" />
+                        </Grid>
+                    </Button>
+                    <Button Grid.Row="1"
+                            Classes="nav"
+                            Command="{Binding ShowSearchCommand}"
+                            Tag="{Binding IsSearchSelected}">
+                        <Grid ColumnDefinitions="4,36,*">
+                            <Border Grid.Column="0"
+                                    Width="4"
+                                    CornerRadius="2"
+                                    Background="{DynamicResource AccentBlueBrush}"
+                                    IsVisible="{Binding IsSearchSelected}" />
+                            <ic:FluentIcon Grid.Column="1"
+                                           Icon="Search"
+                                           IconVariant="Regular"
+                                           IconSize="Size24"
+                                           FontSize="20"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2"
+                                       Text="Search"
+                                       VerticalAlignment="Center"
+                                      FontWeight="Medium" />
+                        </Grid>
+                    </Button>
+                    <Button Grid.Row="2"
+                            Classes="nav"
+                            Command="{Binding ShowTagsCommand}"
+                            Tag="{Binding IsTagsSelected}">
+                        <Grid ColumnDefinitions="4,36,*">
+                            <Border Grid.Column="0"
+                                    Width="4"
+                                    CornerRadius="2"
+                                    Background="{DynamicResource AccentBlueBrush}"
+                                    IsVisible="{Binding IsTagsSelected}" />
+                            <ic:FluentIcon Grid.Column="1"
+                                           Icon="Tag"
+                                           IconVariant="Regular"
+                                           IconSize="Size24"
+                                           FontSize="20"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2"
+                                       Text="Tags"
+                                       VerticalAlignment="Center"
+                                      FontWeight="Medium" />
+                        </Grid>
+                    </Button>
+                    <Button Grid.Row="3"
+                            Classes="nav"
+                            Command="{Binding ShowSettingsCommand}"
+                            Tag="{Binding IsSettingsSelected}">
+                        <Grid ColumnDefinitions="4,36,*">
+                            <Border Grid.Column="0"
+                                    Width="4"
+                                    CornerRadius="2"
+                                    Background="{DynamicResource AccentBlueBrush}"
+                                    IsVisible="{Binding IsSettingsSelected}" />
+                            <ic:FluentIcon Grid.Column="1"
+                                           Icon="Settings"
+                                           IconVariant="Regular"
+                                           IconSize="Size24"
+                                           FontSize="20"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2"
+                                       Text="Settings"
+                                       VerticalAlignment="Center"
+                                      FontWeight="Medium" />
+                        </Grid>
+                    </Button>
+                    <Button Grid.Row="4"
+                            Classes="nav"
+                            Command="{Binding ShowLogsCommand}"
+                            Tag="{Binding IsLogsSelected}">
+                        <Grid ColumnDefinitions="4,36,*">
+                            <Border Grid.Column="0"
+                                    Width="4"
+                                    CornerRadius="2"
+                                    Background="{DynamicResource AccentBlueBrush}"
+                                    IsVisible="{Binding IsLogsSelected}" />
+                            <ic:FluentIcon Grid.Column="1"
+                                           Icon="TaskList"
+                                           IconVariant="Regular"
+                                           IconSize="Size24"
+                                           FontSize="20"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2"
+                                       Text="Logs"
+                                       VerticalAlignment="Center"
+                                      FontWeight="Medium" />
+                        </Grid>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <ContentControl Grid.Column="1" Content="{Binding CurrentPage}" />
+            </Grid>
+        </Grid>
+
+        <Border Grid.Row="2"
+                IsVisible="{Binding IsShellVisible}"
+                Background="{DynamicResource PanelSurfaceBrush}"
+                BorderBrush="{DynamicResource BorderSubtleBrush}"
+                BorderThickness="0,1,0,0">
+            <Grid ColumnDefinitions="154,Auto,*,Auto,*,Auto,Auto,Auto,Auto" Margin="0,0,32,0" ColumnSpacing="14">
+                <StackPanel Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Margin="14,0,18,0">
+                    <Button Classes="accountFooterLogout"
+                            HorizontalAlignment="Stretch"
+                            Command="{Binding Account.ToggleLoginCommand}">
+                        <StackPanel Spacing="0">
+                            <TextBlock
+                                       Text="{Binding Account.DisplayName}"
+                                       HorizontalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"
+                                       VerticalAlignment="Center" />
+                            <TextBlock
+                                       Text="{Binding Account.ActionText}"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <TextBlock Grid.Column="1"
+                           Margin="0,0,18,0"
+                           Text="Overall Progress"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                <ProgressBar Grid.Column="2"
+                             Minimum="0"
+                             Maximum="1"
+                             Value="{Binding Downloads.OverallProgressFraction}"
+                             Height="8"
+                             MinWidth="180"
+                             MaxWidth="560"
+                             VerticalAlignment="Center" />
+                <TextBlock Grid.Column="3"
+                           Text="{Binding Downloads.OverallProgressPercentText}"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextPrimaryBrush}" />
+                <TextBlock Grid.Column="5"
+                           Text="Speed"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                <TextBlock Grid.Column="6"
+                           Text="{Binding Downloads.CurrentSpeedText}"
+                           VerticalAlignment="Center" />
+                <TextBlock Grid.Column="7"
+                           Text="{Binding Downloads.EtaText}"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                <TextBlock Grid.Column="8"
+                           Text="{Binding Downloads.GlobalStatusText}"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextPrimaryBrush}" />
+            </Grid>
+        </Border>
+    </Grid>
+
+</Window>

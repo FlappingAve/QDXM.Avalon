@@ -1,0 +1,19 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:behaviors="using:QDXM.Avalon.Behaviors"
+             x:Class="QDXM.Avalon.Controls.DestinationPreviewBox"
+             x:Name="Root"
+             x:CompileBindings="False">
+  <ScrollViewer Classes="stableHorizontalScroll"
+                behaviors:MiddlePan.IsEnabled="True"
+                AllowAutoHide="False"
+                MaxHeight="{Binding MaxPreviewHeight, ElementName=Root}"
+                HorizontalScrollBarVisibility="Auto"
+                VerticalScrollBarVisibility="{Binding VerticalScrollBarVisibility, ElementName=Root}">
+    <TextBlock Text="{Binding Text, ElementName=Root}"
+               FontFamily="Consolas"
+               FontSize="{Binding PreviewFontSize, ElementName=Root}"
+               Margin="{Binding TextMargin, ElementName=Root}"
+               TextWrapping="NoWrap" />
+  </ScrollViewer>
+</UserControl>

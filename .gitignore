@@ -349,3 +349,12 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+# Runtime app data
+Avalon-Data/
+
+# Test scratch data
+Testing/
+
+# Local/generated docs
+docs/

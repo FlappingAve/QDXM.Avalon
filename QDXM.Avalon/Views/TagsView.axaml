@@ -1,0 +1,951 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="using:QDXM.Avalon.Controls"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:vm="using:QDXM.Avalon.ViewModels"
+             x:Class="QDXM.Avalon.Views.TagsView"
+             x:DataType="vm:TagsViewModel"
+             x:CompileBindings="False">
+  <Grid>
+    <ScrollViewer Margin="24">
+      <StackPanel Spacing="18" MaxWidth="1280">
+        <TextBlock Text="Tags" FontSize="28" FontWeight="SemiBold" />
+
+        <Grid ColumnDefinitions="*,360" ColumnSpacing="18">
+          <Border Grid.Column="0" Classes="panel" Padding="18">
+            <StackPanel Spacing="14">
+              <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                <TextBlock Text="Standard Templates" FontSize="18" FontWeight="SemiBold" />
+                <TextBlock Grid.Column="1"
+                           Text="Use {Field} for metadata. Everything else is text. Use \ or / to create subfolders."
+                           TextWrapping="Wrap"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextMutedBrush}" />
+              </Grid>
+              <Border Classes="templateTableHeader">
+                <Grid ColumnDefinitions="190,*" ColumnSpacing="14">
+                  <TextBlock Text="Template" Foreground="{DynamicResource TextSecondaryBrush}" />
+                  <Grid Grid.Column="1" ColumnDefinitions="*,108">
+                    <TextBlock Text="Preset / Template" Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <TextBlock Grid.Column="1"
+                               Text="Actions"
+                               HorizontalAlignment="Center"
+                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                  </Grid>
+                </Grid>
+              </Border>
+              <Border Classes="templateTableRows">
+                <Grid ColumnDefinitions="190,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="14">
+                  <TextBlock Grid.Row="0" Grid.Column="0" Text="Folder Template" Foreground="{DynamicResource TextSecondaryBrush}" />
+                <StackPanel Grid.Row="0" Grid.Column="1" Spacing="8">
+                  <Grid ColumnDefinitions="*,32,32,32" ColumnSpacing="6">
+                    <ComboBox ItemsSource="{Binding FolderTemplateSlot.Options}"
+                              SelectedItem="{Binding FolderTemplateSlot.SelectedChoice}"
+                              HorizontalAlignment="Stretch" />
+                    <Button Classes="templateAction" Grid.Column="1"
+                            Command="{Binding NewTemplatePresetCommand}"
+                            CommandParameter="{Binding FolderTemplateSlot}"
+                            ToolTip.Tip="New template">
+                      <ic:FluentIcon Icon="Add"
+                                     IconVariant="Regular"
+                                     IconSize="Size24"
+                                     FontSize="18"
+                                     Foreground="{DynamicResource TextPrimaryBrush}" />
+                    </Button>
+                    <Button Classes="templateAction" Grid.Column="2"
+                            Command="{Binding EditTemplatePresetCommand}"
+                            CommandParameter="{Binding FolderTemplateSlot}"
+                            IsVisible="{Binding FolderTemplateSlot.CanEditSelected}"
+                            ToolTip.Tip="Edit template">
+                      <ic:FluentIcon Icon="Edit"
+                                     IconVariant="Regular"
+                                     IconSize="Size24"
+                                     FontSize="18"
+                                     Foreground="{DynamicResource TextPrimaryBrush}" />
+                    </Button>
+                    <Button Classes="templateAction" Grid.Column="3"
+                            Command="{Binding DeleteTemplatePresetCommand}"
+                            CommandParameter="{Binding FolderTemplateSlot}"
+                            IsVisible="{Binding FolderTemplateSlot.CanDeleteSelected}"
+                            ToolTip.Tip="Delete template">
+                      <ic:FluentIcon Icon="Delete"
+                                     IconVariant="Regular"
+                                     IconSize="Size24"
+                                     FontSize="18"
+                                     Foreground="{DynamicResource TextPrimaryBrush}" />
+                    </Button>
+                  </Grid>
+                  <Border IsVisible="{Binding FolderTemplateSlot.IsEditorOpen}"
+                          BorderBrush="#2D8CFF"
+                          BorderThickness="3,0,0,0"
+                          Background="#20252B"
+                          Margin="-204,0,0,0"
+                          Padding="0,10,12,10">
+                    <StackPanel Spacing="8">
+                  <TextBlock Text="{Binding FolderTemplateSlot.EditorTitle}"
+                             FontWeight="SemiBold"
+                             Margin="14,0,0,0" />
+                  <Grid ColumnDefinitions="190,*,106" RowDefinitions="Auto,Auto" ColumnSpacing="14" RowSpacing="8" IsVisible="{Binding FolderTemplateSlot.IsEditorOpen}">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Template Name" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding FolderTemplateSlot.DraftName}" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Template Fields" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <TextBox Grid.Row="1"
+                             Grid.Column="1"
+                             x:Name="FolderTemplateBox"
+                             Text="{Binding FolderTemplateSlot.DraftTemplate}"
+                             GotFocus="TemplateTextBox_OnGotFocus" />
+                    <Button Classes="templateEditorButton"
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Command="{Binding ToggleFolderFieldsCommand}"
+                            MinWidth="106"
+                            Padding="12,8">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Fields" />
+                        <ic:FluentIcon Icon="ChevronRight"
+                                       IconVariant="Regular"
+                                       IconSize="Size24"
+                                       FontSize="18"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       IsVisible="{Binding AreFolderFieldsCollapsed}" />
+                        <ic:FluentIcon Icon="ChevronDown"
+                                       IconVariant="Regular"
+                                       IconSize="Size24"
+                                       FontSize="18"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       IsVisible="{Binding IsFolderFieldsExpanded}" />
+                      </StackPanel>
+                    </Button>
+                  </Grid>
+                  <TextBlock Text="{Binding FolderTemplateSlot.ErrorText}"
+                             IsVisible="{Binding FolderTemplateSlot.HasError}"
+                             Foreground="IndianRed"
+                             FontSize="12"
+                             Margin="204,0,0,0" />
+                  <StackPanel Orientation="Horizontal"
+                              Spacing="10"
+                              IsVisible="{Binding FolderTemplateSlot.IsEditorOpen}"
+                              Margin="204,0,0,0">
+                    <Button Classes="templateEditorButton" Command="{Binding SaveTemplatePresetCommand}"
+                            CommandParameter="{Binding FolderTemplateSlot}"
+                            ToolTip.Tip="Save template">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ic:FluentIcon Icon="Save"
+                                       IconVariant="Regular"
+                                       IconSize="Size24"
+                                       FontSize="18"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" />
+                        <TextBlock Text="Save Template" />
+                      </StackPanel>
+                    </Button>
+                    <Button Classes="secondary templateEditorButton"
+                            Command="{Binding CancelTemplatePresetCommand}"
+                            CommandParameter="{Binding FolderTemplateSlot}">
+                      <TextBlock Text="Cancel" />
+                    </Button>
+                  </StackPanel>
+                  <TextBlock Text="{Binding FolderTemplateCoverWarningText}"
+                             IsVisible="{Binding HasFolderTemplateCoverWarning}"
+                             Foreground="IndianRed"
+                             FontSize="12"
+                             Margin="204,0,0,0" />
+                  <Border IsVisible="{Binding IsFolderFieldsExpanded}"
+                          Background="#202326"
+                          BorderBrush="{DynamicResource BorderSubtleBrush}"
+                          BorderThickness="1"
+                          CornerRadius="5"
+                          Padding="14"
+                          Margin="204,2,0,0">
+                    <StackPanel Spacing="10">
+                      <TextBlock Text="Normal" Foreground="{DynamicResource TextSecondaryBrush}" />
+                      <WrapPanel>
+                        <Button Classes="templateField" Tag="Folder|AlbumArtist" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Example Artist&#x0a;Primary album artist."><TextBlock Text="Album Artist" /></Button>
+                        <Button Classes="templateField" Tag="Folder|AlbumTitle" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Example Album&#x0a;Ex: Example Album [Deluxe Edition]&#x0a;Album titles may already include edition text."><TextBlock Text="Album Title" /></Button>
+                        <Button Classes="templateField" Tag="Folder|AlbumComposer" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Example Album Composer&#x0a;Album-level composer only. Empty when Qobuz does not provide it."><TextBlock Text="Album Composer" /></Button>
+                        <Button Classes="templateField" Tag="Folder|Version" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Deluxe Edition&#x0a;Skipped when the title already includes it in the same folder segment."><TextBlock Text="Version" /></Button>
+                        <Button Classes="templateField" Tag="Folder|ReleaseYear" Click="InsertTemplateField_OnClick" ToolTip.Tip="Format: YYYY&#x0a;Derived from release date."><TextBlock Text="Release Year" /></Button>
+                        <Button Classes="templateField" Tag="Folder|ReleaseDate" Click="InsertTemplateField_OnClick" ToolTip.Tip="Format: YYYY-MM-DD"><TextBlock Text="Release Date" /></Button>
+                        <Button Classes="templateField" Tag="Folder|Quality" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: FLAC (24bit-96kHz)&#x0a;Album quality."><TextBlock Text="Quality" /></Button>
+                      </WrapPanel>
+                      <TextBlock Text="Advanced" Foreground="{DynamicResource TextSecondaryBrush}" />
+                      <WrapPanel>
+                        <Button Classes="templateField" Tag="Folder|ReleaseType" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Album&#x0a;EP is normalized from Qobuz epmini values."><TextBlock Text="Release Type" /></Button>
+                        <Button Classes="templateField" Tag="Folder|Label" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Example Records&#x0a;Use depending on metadata."><TextBlock Text="Label" /></Button>
+                        <Button Classes="templateField" Tag="Folder|UPC" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 0000000000000&#x0a;Album barcode."><TextBlock Text="UPC" /></Button>
+                        <Button Classes="templateField" Tag="Folder|TotalDiscs" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 2"><TextBlock Text="Total Discs" /></Button>
+                        <Button Classes="templateField" Tag="Folder|TotalDiscsPadded" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 02&#x0a;Empty when no disc count is available."><TextBlock Text="Total Discs Padded" /></Button>
+                        <Button Classes="templateField" Tag="Folder|ExplicitAdvisory" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Explicit&#x0a;Empty when the album is not explicit."><TextBlock Text="Explicit Advisory" /></Button>
+                      </WrapPanel>
+                    </StackPanel>
+                  </Border>
+                    </StackPanel>
+                  </Border>
+                </StackPanel>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Filename Template" Foreground="{DynamicResource TextSecondaryBrush}" />
+                <StackPanel Grid.Row="1" Grid.Column="1" Spacing="8">
+                  <Grid ColumnDefinitions="*,32,32,32" ColumnSpacing="6">
+                    <ComboBox ItemsSource="{Binding FilenameTemplateSlot.Options}"
+                              SelectedItem="{Binding FilenameTemplateSlot.SelectedChoice}"
+                              HorizontalAlignment="Stretch" />
+                    <Button Classes="templateAction" Grid.Column="1"
+                            Command="{Binding NewTemplatePresetCommand}"
+                            CommandParameter="{Binding FilenameTemplateSlot}"
+                            ToolTip.Tip="New template">
+                      <ic:FluentIcon Icon="Add"
+                                     IconVariant="Regular"
+                                     IconSize="Size24"
+                                     FontSize="18"
+                                     Foreground="{DynamicResource TextPrimaryBrush}" />
+                    </Button>
+                    <Button Classes="templateAction" Grid.Column="2"
+                            Command="{Binding EditTemplatePresetCommand}"
+                            CommandParameter="{Binding FilenameTemplateSlot}"
+                            IsVisible="{Binding FilenameTemplateSlot.CanEditSelected}"
+                            ToolTip.Tip="Edit template">
+                      <ic:FluentIcon Icon="Edit"
+                                     IconVariant="Regular"
+                                     IconSize="Size24"
+                                     FontSize="18"
+                                     Foreground="{DynamicResource TextPrimaryBrush}" />
+                    </Button>
+                    <Button Classes="templateAction" Grid.Column="3"
+                            Command="{Binding DeleteTemplatePresetCommand}"
+                            CommandParameter="{Binding FilenameTemplateSlot}"
+                            IsVisible="{Binding FilenameTemplateSlot.CanDeleteSelected}"
+                            ToolTip.Tip="Delete template">
+                      <ic:FluentIcon Icon="Delete"
+                                     IconVariant="Regular"
+                                     IconSize="Size24"
+                                     FontSize="18"
+                                     Foreground="{DynamicResource TextPrimaryBrush}" />
+                    </Button>
+                  </Grid>
+                  <Border IsVisible="{Binding FilenameTemplateSlot.IsEditorOpen}"
+                          BorderBrush="#2D8CFF"
+                          BorderThickness="3,0,0,0"
+                          Background="#20252B"
+                          Margin="-204,0,0,0"
+                          Padding="0,10,12,10">
+                    <StackPanel Spacing="8">
+                  <TextBlock Text="{Binding FilenameTemplateSlot.EditorTitle}"
+                             FontWeight="SemiBold"
+                             Margin="14,0,0,0" />
+                  <Grid ColumnDefinitions="190,*,106" RowDefinitions="Auto,Auto" ColumnSpacing="14" RowSpacing="8" IsVisible="{Binding FilenameTemplateSlot.IsEditorOpen}">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Template Name" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding FilenameTemplateSlot.DraftName}" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Template Fields" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <TextBox Grid.Row="1"
+                             Grid.Column="1"
+                             x:Name="FilenameTemplateBox"
+                             Text="{Binding FilenameTemplateSlot.DraftTemplate}"
+                             GotFocus="TemplateTextBox_OnGotFocus" />
+                    <Button Classes="templateEditorButton"
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Command="{Binding ToggleFilenameFieldsCommand}"
+                            MinWidth="106"
+                            Padding="12,8">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Fields" />
+                        <ic:FluentIcon Icon="ChevronRight"
+                                       IconVariant="Regular"
+                                       IconSize="Size24"
+                                       FontSize="18"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       IsVisible="{Binding AreFilenameFieldsCollapsed}" />
+                        <ic:FluentIcon Icon="ChevronDown"
+                                       IconVariant="Regular"
+                                       IconSize="Size24"
+                                       FontSize="18"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       IsVisible="{Binding IsFilenameFieldsExpanded}" />
+                      </StackPanel>
+                    </Button>
+                  </Grid>
+                  <TextBlock Text="{Binding FilenameTemplateSlot.ErrorText}"
+                             IsVisible="{Binding FilenameTemplateSlot.HasError}"
+                             Foreground="IndianRed"
+                             FontSize="12"
+                             Margin="204,0,0,0" />
+                  <StackPanel Orientation="Horizontal"
+                              Spacing="10"
+                              IsVisible="{Binding FilenameTemplateSlot.IsEditorOpen}"
+                              Margin="204,0,0,0">
+                    <Button Classes="templateEditorButton" Command="{Binding SaveTemplatePresetCommand}"
+                            CommandParameter="{Binding FilenameTemplateSlot}"
+                            ToolTip.Tip="Save template">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ic:FluentIcon Icon="Save"
+                                       IconVariant="Regular"
+                                       IconSize="Size24"
+                                       FontSize="18"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" />
+                        <TextBlock Text="Save Template" />
+                      </StackPanel>
+                    </Button>
+                    <Button Classes="secondary templateEditorButton"
+                            Command="{Binding CancelTemplatePresetCommand}"
+                            CommandParameter="{Binding FilenameTemplateSlot}">
+                      <TextBlock Text="Cancel" />
+                    </Button>
+                  </StackPanel>
+                  <TextBlock Text="{Binding FilenameTemplateErrorText}"
+                             IsVisible="{Binding HasFilenameTemplateError}"
+                             Foreground="IndianRed"
+                             FontSize="12"
+                             Margin="204,0,0,0" />
+                  <Border IsVisible="{Binding IsFilenameFieldsExpanded}"
+                          Background="#202326"
+                          BorderBrush="{DynamicResource BorderSubtleBrush}"
+                          BorderThickness="1"
+                          CornerRadius="5"
+                          Padding="14"
+                          Margin="204,2,0,0">
+                    <StackPanel Spacing="10">
+                      <TextBlock Text="Normal" Foreground="{DynamicResource TextSecondaryBrush}" />
+                      <WrapPanel>
+                        <Button Classes="templateField" Tag="Filename|TrackNumber" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 1"><TextBlock Text="Track Number" /></Button>
+                        <Button Classes="templateField" Tag="Filename|TrackNumberPadded" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 01"><TextBlock Text="Track Number Padded" /></Button>
+                        <Button Classes="templateField" Tag="Filename|TrackTitle" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Example Track"><TextBlock Text="Track Title" /></Button>
+                        <Button Classes="templateField" Tag="Filename|TrackComposer" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Example Track Composer&#x0a;Track-level composer only. Empty when Qobuz does not provide it."><TextBlock Text="Track Composer" /></Button>
+                        <Button Classes="templateField" Tag="Filename|Version" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Remastered Edition&#x0a;Skipped when the title already includes it in the same file segment."><TextBlock Text="Version" /></Button>
+                        <Button Classes="templateField" Tag="Filename|TrackArtist" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Example Artist"><TextBlock Text="Track Artist" /></Button>
+                        <Button Classes="templateField" Tag="Filename|TotalTracks" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 10"><TextBlock Text="Total Tracks" /></Button>
+                        <Button Classes="templateField" Tag="Filename|TotalTracksPadded" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 09&#x0a;Padded to match Track Number Padded."><TextBlock Text="Total Tracks Padded" /></Button>
+                        <Button Classes="templateField" Tag="Filename|ReleaseYear" Click="InsertTemplateField_OnClick" ToolTip.Tip="Format: YYYY"><TextBlock Text="Release Year" /></Button>
+                        <Button Classes="templateField" Tag="Filename|ReleaseDate" Click="InsertTemplateField_OnClick" ToolTip.Tip="Format: YYYY-MM-DD"><TextBlock Text="Release Date" /></Button>
+                        <Button Classes="templateField" Tag="Filename|Quality" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: FLAC (24bit-96kHz)"><TextBlock Text="Quality" /></Button>
+                      </WrapPanel>
+                      <TextBlock Text="Advanced" Foreground="{DynamicResource TextSecondaryBrush}" />
+                      <WrapPanel>
+                        <Button Classes="templateField" Tag="Filename|AlbumArtist" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Example Artist"><TextBlock Text="Album Artist" /></Button>
+                        <Button Classes="templateField" Tag="Filename|AlbumTitle" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Example Album"><TextBlock Text="Album Title" /></Button>
+                        <Button Classes="templateField" Tag="Filename|AlbumComposer" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Example Album Composer&#x0a;Album-level composer only. Empty when Qobuz does not provide it."><TextBlock Text="Album Composer" /></Button>
+                        <Button Classes="templateField" Tag="Filename|DiscNumber" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 1"><TextBlock Text="Disc Number" /></Button>
+                        <Button Classes="templateField" Tag="Filename|DiscNumberPadded" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 01"><TextBlock Text="Disc Number Padded" /></Button>
+                        <Button Classes="templateField" Tag="Filename|TotalDiscs" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 2"><TextBlock Text="Total Discs" /></Button>
+                        <Button Classes="templateField" Tag="Filename|TotalDiscsPadded" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 02"><TextBlock Text="Total Discs Padded" /></Button>
+                        <Button Classes="templateField" Tag="Filename|ReleaseType" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Album"><TextBlock Text="Release Type" /></Button>
+                        <Button Classes="templateField" Tag="Filename|Label" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Example Records"><TextBlock Text="Label" /></Button>
+                        <Button Classes="templateField" Tag="Filename|ISRC" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: GBUM72600001"><TextBlock Text="ISRC" /></Button>
+                        <Button Classes="templateField" Tag="Filename|ExplicitAdvisory" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Explicit&#x0a;Empty when the track is not explicit."><TextBlock Text="Explicit Advisory" /></Button>
+                      </WrapPanel>
+                    </StackPanel>
+                  </Border>
+                    </StackPanel>
+                  </Border>
+                </StackPanel>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Disc Folder Template" Foreground="{DynamicResource TextSecondaryBrush}" />
+                <StackPanel Grid.Row="2" Grid.Column="1" Spacing="8">
+                  <Grid ColumnDefinitions="*,32,32,32" ColumnSpacing="6">
+                    <ComboBox ItemsSource="{Binding DiscFolderTemplateSlot.Options}"
+                              SelectedItem="{Binding DiscFolderTemplateSlot.SelectedChoice}"
+                              HorizontalAlignment="Stretch" />
+                    <Button Classes="templateAction" Grid.Column="1"
+                            Command="{Binding NewTemplatePresetCommand}"
+                            CommandParameter="{Binding DiscFolderTemplateSlot}"
+                            ToolTip.Tip="New template">
+                      <ic:FluentIcon Icon="Add"
+                                     IconVariant="Regular"
+                                     IconSize="Size24"
+                                     FontSize="18"
+                                     Foreground="{DynamicResource TextPrimaryBrush}" />
+                    </Button>
+                    <Button Classes="templateAction" Grid.Column="2"
+                            Command="{Binding EditTemplatePresetCommand}"
+                            CommandParameter="{Binding DiscFolderTemplateSlot}"
+                            IsVisible="{Binding DiscFolderTemplateSlot.CanEditSelected}"
+                            ToolTip.Tip="Edit template">
+                      <ic:FluentIcon Icon="Edit"
+                                     IconVariant="Regular"
+                                     IconSize="Size24"
+                                     FontSize="18"
+                                     Foreground="{DynamicResource TextPrimaryBrush}" />
+                    </Button>
+                    <Button Classes="templateAction" Grid.Column="3"
+                            Command="{Binding DeleteTemplatePresetCommand}"
+                            CommandParameter="{Binding DiscFolderTemplateSlot}"
+                            IsVisible="{Binding DiscFolderTemplateSlot.CanDeleteSelected}"
+                            ToolTip.Tip="Delete template">
+                      <ic:FluentIcon Icon="Delete"
+                                     IconVariant="Regular"
+                                     IconSize="Size24"
+                                     FontSize="18"
+                                     Foreground="{DynamicResource TextPrimaryBrush}" />
+                    </Button>
+                  </Grid>
+                  <Border IsVisible="{Binding DiscFolderTemplateSlot.IsEditorOpen}"
+                          BorderBrush="#2D8CFF"
+                          BorderThickness="3,0,0,0"
+                          Background="#20252B"
+                          Margin="-204,0,0,0"
+                          Padding="0,10,12,10">
+                    <StackPanel Spacing="8">
+                  <TextBlock Text="{Binding DiscFolderTemplateSlot.EditorTitle}"
+                             FontWeight="SemiBold"
+                             Margin="14,0,0,0" />
+                  <Grid ColumnDefinitions="190,*,106" RowDefinitions="Auto,Auto" ColumnSpacing="14" RowSpacing="8" IsVisible="{Binding DiscFolderTemplateSlot.IsEditorOpen}">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Template Name" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding DiscFolderTemplateSlot.DraftName}" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Template Fields" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <TextBox Grid.Row="1"
+                             Grid.Column="1"
+                             x:Name="DiscFolderTemplateBox"
+                             Text="{Binding DiscFolderTemplateSlot.DraftTemplate}"
+                             GotFocus="TemplateTextBox_OnGotFocus" />
+                    <Button Classes="templateEditorButton"
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Command="{Binding ToggleDiscFieldsCommand}"
+                            MinWidth="106"
+                            Padding="12,8">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Fields" />
+                        <ic:FluentIcon Icon="ChevronRight"
+                                       IconVariant="Regular"
+                                       IconSize="Size24"
+                                       FontSize="18"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       IsVisible="{Binding AreDiscFieldsCollapsed}" />
+                        <ic:FluentIcon Icon="ChevronDown"
+                                       IconVariant="Regular"
+                                       IconSize="Size24"
+                                       FontSize="18"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       IsVisible="{Binding IsDiscFieldsExpanded}" />
+                      </StackPanel>
+                    </Button>
+                  </Grid>
+                  <TextBlock Text="{Binding DiscFolderTemplateSlot.ErrorText}"
+                             IsVisible="{Binding DiscFolderTemplateSlot.HasError}"
+                             Foreground="IndianRed"
+                             FontSize="12"
+                             Margin="204,0,0,0" />
+                  <TextBlock Text="{Binding DiscFolderTemplateSlot.TemplateValidationErrorText}"
+                             IsVisible="{Binding DiscFolderTemplateSlot.HasTemplateValidationError}"
+                             Foreground="IndianRed"
+                             FontSize="12"
+                             Margin="204,0,0,0" />
+                  <TextBlock Text="{Binding DiscWorkComposerTemplateWarningText}"
+                             IsVisible="{Binding HasDraftDiscWorkComposerTemplateWarning}"
+                             Foreground="{DynamicResource WarningBrush}"
+                             TextWrapping="Wrap"
+                             FontSize="12"
+                             Margin="204,0,0,0" />
+                  <StackPanel Orientation="Horizontal"
+                              Spacing="10"
+                              IsVisible="{Binding DiscFolderTemplateSlot.IsEditorOpen}"
+                              Margin="204,0,0,0">
+                    <Button Classes="templateEditorButton" Command="{Binding SaveTemplatePresetCommand}"
+                            CommandParameter="{Binding DiscFolderTemplateSlot}"
+                            ToolTip.Tip="Save template">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ic:FluentIcon Icon="Save"
+                                       IconVariant="Regular"
+                                       IconSize="Size24"
+                                       FontSize="18"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" />
+                        <TextBlock Text="Save Template" />
+                      </StackPanel>
+                    </Button>
+                    <Button Classes="secondary templateEditorButton"
+                            Command="{Binding CancelTemplatePresetCommand}"
+                            CommandParameter="{Binding DiscFolderTemplateSlot}">
+                      <TextBlock Text="Cancel" />
+                    </Button>
+                  </StackPanel>
+                  <Border IsVisible="{Binding IsDiscFieldsExpanded}"
+                          Background="#202326"
+                          BorderBrush="{DynamicResource BorderSubtleBrush}"
+                          BorderThickness="1"
+                          CornerRadius="5"
+                          Padding="14"
+                          Margin="204,2,0,0">
+                    <StackPanel Spacing="10">
+                      <TextBlock Text="Normal" Foreground="{DynamicResource TextSecondaryBrush}" />
+                      <WrapPanel>
+                        <Button Classes="templateField" Tag="Disc|DiscNumber" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 1"><TextBlock Text="Disc Number" /></Button>
+                        <Button Classes="templateField" Tag="Disc|DiscNumberPadded" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 01"><TextBlock Text="Disc Number Padded" /></Button>
+                        <Button Classes="templateField" Tag="Disc|TotalDiscs" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 2"><TextBlock Text="Total Discs" /></Button>
+                        <Button Classes="templateField" Tag="Disc|TotalDiscsPadded" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 02"><TextBlock Text="Total Discs Padded" /></Button>
+                        <Button Classes="templateField" Tag="Disc|Work" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Example Work No. 1&#x0a;Adds work headings to disc folders. Work Handling controls inline text vs work folders."><TextBlock Text="Work" /></Button>
+                        <Button Classes="templateField" Tag="Disc|WorkComposer" Click="InsertTemplateField_OnClick" ToolTip.Tip="Use with {Work}. Ex: {Work} ({WorkComposer})&#x0a;Composer is taken from the first track found for each work."><TextBlock Text="Work Composer" /></Button>
+                      </WrapPanel>
+                    </StackPanel>
+                  </Border>
+                    </StackPanel>
+                  </Border>
+                  <TextBlock Text="{Binding DiscWorkComposerTemplateWarningText}"
+                             IsVisible="{Binding HasSelectedDiscWorkComposerTemplateWarning}"
+                             Foreground="{DynamicResource WarningBrush}"
+                             TextWrapping="Wrap"
+                             FontSize="12" />
+                </StackPanel>
+
+                <TextBlock Grid.Row="3"
+                           Grid.Column="0"
+                           Text="Work Handling"
+                           IsVisible="{Binding ShowsWorkHandling}"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                <Grid Grid.Row="3"
+                      Grid.Column="1"
+                      ColumnDefinitions="170,Auto,90,Auto"
+                      ColumnSpacing="10"
+                      IsVisible="{Binding ShowsWorkHandling}">
+                  <ComboBox Grid.Column="0"
+                            ItemsSource="{Binding WorkHandlingOptions}"
+                            SelectedItem="{Binding DiscWorkHandling}" />
+                  <TextBlock Grid.Column="1"
+                             Text="Separator"
+                             VerticalAlignment="Center"
+                             Foreground="{DynamicResource TextSecondaryBrush}" />
+                  <TextBox Grid.Column="2" Text="{Binding DiscWorkSeparator}" />
+                  <CheckBox Grid.Column="3"
+                            Content="No spaces"
+                            IsChecked="{Binding DiscWorkSeparatorNoSpaces}"
+                            VerticalAlignment="Center" />
+                </Grid>
+                </Grid>
+              </Border>
+
+            </StackPanel>
+          </Border>
+
+          <Border Grid.Column="1" Classes="panel" Padding="18" VerticalAlignment="Top">
+            <Grid RowDefinitions="Auto,Auto" RowSpacing="12">
+              <TextBlock Text="Live Preview" FontSize="18" FontWeight="SemiBold" />
+              <Border Grid.Row="1"
+                      Background="#121416"
+                      BorderBrush="{DynamicResource BorderSubtleBrush}"
+                      BorderThickness="1"
+                      CornerRadius="5"
+                      Padding="12">
+                <controls:DestinationPreviewBox Text="{Binding CombinedTemplatePreview}"
+                                                PreviewFontSize="13"
+                                                TextMargin="0,0,16,32"
+                                                MaxPreviewHeight="300"
+                                                VerticalScrollBarVisibility="Auto" />
+              </Border>
+            </Grid>
+          </Border>
+        </Grid>
+
+        <Grid ColumnDefinitions="*,360" ColumnSpacing="18">
+          <Border Grid.Column="0" Classes="panel" Padding="18">
+            <StackPanel Spacing="14">
+              <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                <TextBlock Text="Playlist Templates" FontSize="18" FontWeight="SemiBold" />
+                <TextBlock Grid.Column="1"
+                           Text="Controls used when playlist organization keeps tracks together."
+                           TextWrapping="Wrap"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextMutedBrush}" />
+              </Grid>
+              <Grid ColumnDefinitions="190,*" RowDefinitions="Auto,Auto" ColumnSpacing="14" RowSpacing="8">
+                <TextBlock Grid.Row="0"
+                           Grid.Column="0"
+                           Text="Playlist Organization"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                <ComboBox Grid.Row="0"
+                          Grid.Column="1"
+                          ItemsSource="{Binding PlaylistOrganizationOptions}"
+                          SelectedItem="{Binding PlaylistOrganization}"
+                          HorizontalAlignment="Left"
+                          MinWidth="226" />
+
+                <TextBlock Grid.Row="1"
+                           Grid.Column="1"
+                           Text="Standard folder, filename, and disc folder templates will be used for playlist tracks."
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource TextMutedBrush}"
+                           IsVisible="{Binding UsesStandardTemplatesForPlaylists}" />
+              </Grid>
+              <Border Classes="templateTableHeader"
+                      IsVisible="{Binding UsesPlaylistTemplates}">
+                <Grid ColumnDefinitions="190,*"
+                      ColumnSpacing="14">
+                  <TextBlock Text="Template" Foreground="{DynamicResource TextSecondaryBrush}" />
+                  <Grid Grid.Column="1" ColumnDefinitions="*,108">
+                    <TextBlock Text="Preset / Template" Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <TextBlock Grid.Column="1"
+                               Text="Actions"
+                               HorizontalAlignment="Center"
+                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                  </Grid>
+                </Grid>
+              </Border>
+              <Border Classes="templateTableRows"
+                      IsVisible="{Binding UsesPlaylistTemplates}">
+                <Grid ColumnDefinitions="190,*" RowDefinitions="Auto,Auto" RowSpacing="14">
+                  <TextBlock Grid.Row="0"
+                           Grid.Column="0"
+                           Text="Playlist Folder Template"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                <StackPanel Grid.Row="0"
+                            Grid.Column="1"
+                            Spacing="8">
+                  <Grid ColumnDefinitions="*,32,32,32" ColumnSpacing="6">
+                    <ComboBox ItemsSource="{Binding PlaylistFolderTemplateSlot.Options}"
+                              SelectedItem="{Binding PlaylistFolderTemplateSlot.SelectedChoice}"
+                              HorizontalAlignment="Stretch" />
+                    <Button Classes="templateAction" Grid.Column="1"
+                            Command="{Binding NewTemplatePresetCommand}"
+                            CommandParameter="{Binding PlaylistFolderTemplateSlot}"
+                            ToolTip.Tip="New template">
+                      <ic:FluentIcon Icon="Add"
+                                     IconVariant="Regular"
+                                     IconSize="Size24"
+                                     FontSize="18"
+                                     Foreground="{DynamicResource TextPrimaryBrush}" />
+                    </Button>
+                    <Button Classes="templateAction" Grid.Column="2"
+                            Command="{Binding EditTemplatePresetCommand}"
+                            CommandParameter="{Binding PlaylistFolderTemplateSlot}"
+                            IsVisible="{Binding PlaylistFolderTemplateSlot.CanEditSelected}"
+                            ToolTip.Tip="Edit template">
+                      <ic:FluentIcon Icon="Edit"
+                                     IconVariant="Regular"
+                                     IconSize="Size24"
+                                     FontSize="18"
+                                     Foreground="{DynamicResource TextPrimaryBrush}" />
+                    </Button>
+                    <Button Classes="templateAction" Grid.Column="3"
+                            Command="{Binding DeleteTemplatePresetCommand}"
+                            CommandParameter="{Binding PlaylistFolderTemplateSlot}"
+                            IsVisible="{Binding PlaylistFolderTemplateSlot.CanDeleteSelected}"
+                            ToolTip.Tip="Delete template">
+                      <ic:FluentIcon Icon="Delete"
+                                     IconVariant="Regular"
+                                     IconSize="Size24"
+                                     FontSize="18"
+                                     Foreground="{DynamicResource TextPrimaryBrush}" />
+                    </Button>
+                  </Grid>
+                  <Border IsVisible="{Binding PlaylistFolderTemplateSlot.IsEditorOpen}"
+                          BorderBrush="#2D8CFF"
+                          BorderThickness="3,0,0,0"
+                          Background="#20252B"
+                          Margin="-204,0,0,0"
+                          Padding="0,10,12,10">
+                    <StackPanel Spacing="8">
+                  <TextBlock Text="{Binding PlaylistFolderTemplateSlot.EditorTitle}"
+                             FontWeight="SemiBold"
+                             Margin="14,0,0,0" />
+                  <Grid ColumnDefinitions="190,*,106" RowDefinitions="Auto,Auto" ColumnSpacing="14" RowSpacing="8" IsVisible="{Binding PlaylistFolderTemplateSlot.IsEditorOpen}">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Template Name" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding PlaylistFolderTemplateSlot.DraftName}" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Template Fields" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <TextBox Grid.Row="1"
+                             Grid.Column="1"
+                             x:Name="PlaylistFolderTemplateBox"
+                             Text="{Binding PlaylistFolderTemplateSlot.DraftTemplate}"
+                             GotFocus="TemplateTextBox_OnGotFocus" />
+                    <Button Classes="templateEditorButton"
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Command="{Binding TogglePlaylistFolderFieldsCommand}"
+                            MinWidth="106"
+                            Padding="12,8">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Fields" />
+                        <ic:FluentIcon Icon="ChevronRight"
+                                       IconVariant="Regular"
+                                       IconSize="Size24"
+                                       FontSize="18"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       IsVisible="{Binding ArePlaylistFolderFieldsCollapsed}" />
+                        <ic:FluentIcon Icon="ChevronDown"
+                                       IconVariant="Regular"
+                                       IconSize="Size24"
+                                       FontSize="18"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       IsVisible="{Binding IsPlaylistFolderFieldsExpanded}" />
+                      </StackPanel>
+                    </Button>
+                  </Grid>
+                  <TextBlock Text="{Binding PlaylistFolderTemplateSlot.ErrorText}"
+                             IsVisible="{Binding PlaylistFolderTemplateSlot.HasError}"
+                             Foreground="IndianRed"
+                             FontSize="12"
+                             Margin="204,0,0,0" />
+                  <StackPanel Orientation="Horizontal"
+                              Spacing="10"
+                              IsVisible="{Binding PlaylistFolderTemplateSlot.IsEditorOpen}"
+                              Margin="204,0,0,0">
+                    <Button Classes="templateEditorButton" Command="{Binding SaveTemplatePresetCommand}"
+                            CommandParameter="{Binding PlaylistFolderTemplateSlot}"
+                            ToolTip.Tip="Save template">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ic:FluentIcon Icon="Save"
+                                       IconVariant="Regular"
+                                       IconSize="Size24"
+                                       FontSize="18"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" />
+                        <TextBlock Text="Save Template" />
+                      </StackPanel>
+                    </Button>
+                    <Button Classes="secondary templateEditorButton"
+                            Command="{Binding CancelTemplatePresetCommand}"
+                            CommandParameter="{Binding PlaylistFolderTemplateSlot}">
+                      <TextBlock Text="Cancel" />
+                    </Button>
+                  </StackPanel>
+                  <Border IsVisible="{Binding IsPlaylistFolderFieldsExpanded}"
+                          Background="#202326"
+                          BorderBrush="{DynamicResource BorderSubtleBrush}"
+                          BorderThickness="1"
+                          CornerRadius="5"
+                          Padding="14"
+                          Margin="204,2,0,0">
+                    <StackPanel Spacing="10">
+                      <TextBlock Text="Playlist" Foreground="{DynamicResource TextSecondaryBrush}" />
+                      <WrapPanel>
+                        <Button Classes="templateField" Tag="PlaylistFolder|PlaylistTitle" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Road Trip&#x0a;Sanitized and capped for safe folder names."><TextBlock Text="Playlist Title" /></Button>
+                        <Button Classes="templateField" Tag="PlaylistFolder|PlaylistOwner" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: MusicEnjoyer&#x0a;Playlist creator or source account when Qobuz provides it.&#x0a;Falls back to Unknown Owner when blank."><TextBlock Text="Playlist Owner" /></Button>
+                        <Button Classes="templateField" Tag="PlaylistFolder|PlaylistTotalTracks" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 1900&#x0a;Total tracks in this playlist download."><TextBlock Text="Playlist Total Tracks" /></Button>
+                        <Button Classes="templateField" Tag="PlaylistFolder|PlaylistTotalTracksPadded" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 1900&#x0a;Padded to match Playlist Number Padded."><TextBlock Text="Playlist Total Tracks Padded" /></Button>
+                      </WrapPanel>
+                    </StackPanel>
+                  </Border>
+                    </StackPanel>
+                  </Border>
+                </StackPanel>
+
+                <TextBlock Grid.Row="1"
+                           Grid.Column="0"
+                           Text="Playlist Filename Template"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                <StackPanel Grid.Row="1"
+                            Grid.Column="1"
+                            Spacing="8">
+                  <Grid ColumnDefinitions="*,32,32,32" ColumnSpacing="6">
+                    <ComboBox ItemsSource="{Binding PlaylistFilenameTemplateSlot.Options}"
+                              SelectedItem="{Binding PlaylistFilenameTemplateSlot.SelectedChoice}"
+                              HorizontalAlignment="Stretch" />
+                    <Button Classes="templateAction" Grid.Column="1"
+                            Command="{Binding NewTemplatePresetCommand}"
+                            CommandParameter="{Binding PlaylistFilenameTemplateSlot}"
+                            ToolTip.Tip="New template">
+                      <ic:FluentIcon Icon="Add"
+                                     IconVariant="Regular"
+                                     IconSize="Size24"
+                                     FontSize="18"
+                                     Foreground="{DynamicResource TextPrimaryBrush}" />
+                    </Button>
+                    <Button Classes="templateAction" Grid.Column="2"
+                            Command="{Binding EditTemplatePresetCommand}"
+                            CommandParameter="{Binding PlaylistFilenameTemplateSlot}"
+                            IsVisible="{Binding PlaylistFilenameTemplateSlot.CanEditSelected}"
+                            ToolTip.Tip="Edit template">
+                      <ic:FluentIcon Icon="Edit"
+                                     IconVariant="Regular"
+                                     IconSize="Size24"
+                                     FontSize="18"
+                                     Foreground="{DynamicResource TextPrimaryBrush}" />
+                    </Button>
+                    <Button Classes="templateAction" Grid.Column="3"
+                            Command="{Binding DeleteTemplatePresetCommand}"
+                            CommandParameter="{Binding PlaylistFilenameTemplateSlot}"
+                            IsVisible="{Binding PlaylistFilenameTemplateSlot.CanDeleteSelected}"
+                            ToolTip.Tip="Delete template">
+                      <ic:FluentIcon Icon="Delete"
+                                     IconVariant="Regular"
+                                     IconSize="Size24"
+                                     FontSize="18"
+                                     Foreground="{DynamicResource TextPrimaryBrush}" />
+                    </Button>
+                  </Grid>
+                  <Border IsVisible="{Binding PlaylistFilenameTemplateSlot.IsEditorOpen}"
+                          BorderBrush="#2D8CFF"
+                          BorderThickness="3,0,0,0"
+                          Background="#20252B"
+                          Margin="-204,0,0,0"
+                          Padding="0,10,12,10">
+                    <StackPanel Spacing="8">
+                  <TextBlock Text="{Binding PlaylistFilenameTemplateSlot.EditorTitle}"
+                             FontWeight="SemiBold"
+                             Margin="14,0,0,0" />
+                  <Grid ColumnDefinitions="190,*,106" RowDefinitions="Auto,Auto" ColumnSpacing="14" RowSpacing="8" IsVisible="{Binding PlaylistFilenameTemplateSlot.IsEditorOpen}">
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Template Name" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding PlaylistFilenameTemplateSlot.DraftName}" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Template Fields" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <TextBox Grid.Row="1"
+                             Grid.Column="1"
+                             x:Name="PlaylistFilenameTemplateBox"
+                             Text="{Binding PlaylistFilenameTemplateSlot.DraftTemplate}"
+                             GotFocus="TemplateTextBox_OnGotFocus" />
+                    <Button Classes="templateEditorButton"
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Command="{Binding TogglePlaylistFilenameFieldsCommand}"
+                            MinWidth="106"
+                            Padding="12,8">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Fields" />
+                        <ic:FluentIcon Icon="ChevronRight"
+                                       IconVariant="Regular"
+                                       IconSize="Size24"
+                                       FontSize="18"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       IsVisible="{Binding ArePlaylistFilenameFieldsCollapsed}" />
+                        <ic:FluentIcon Icon="ChevronDown"
+                                       IconVariant="Regular"
+                                       IconSize="Size24"
+                                       FontSize="18"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       IsVisible="{Binding IsPlaylistFilenameFieldsExpanded}" />
+                      </StackPanel>
+                    </Button>
+                  </Grid>
+                  <TextBlock Text="{Binding PlaylistFilenameTemplateSlot.ErrorText}"
+                             IsVisible="{Binding PlaylistFilenameTemplateSlot.HasError}"
+                             Foreground="IndianRed"
+                             FontSize="12"
+                             Margin="204,0,0,0" />
+                  <StackPanel Orientation="Horizontal"
+                              Spacing="10"
+                              IsVisible="{Binding PlaylistFilenameTemplateSlot.IsEditorOpen}"
+                              Margin="204,0,0,0">
+                    <Button Classes="templateEditorButton" Command="{Binding SaveTemplatePresetCommand}"
+                            CommandParameter="{Binding PlaylistFilenameTemplateSlot}"
+                            ToolTip.Tip="Save template">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ic:FluentIcon Icon="Save"
+                                       IconVariant="Regular"
+                                       IconSize="Size24"
+                                       FontSize="18"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" />
+                        <TextBlock Text="Save Template" />
+                      </StackPanel>
+                    </Button>
+                    <Button Classes="secondary templateEditorButton"
+                            Command="{Binding CancelTemplatePresetCommand}"
+                            CommandParameter="{Binding PlaylistFilenameTemplateSlot}">
+                      <TextBlock Text="Cancel" />
+                    </Button>
+                  </StackPanel>
+                  <Border IsVisible="{Binding IsPlaylistFilenameFieldsExpanded}"
+                          Background="#202326"
+                          BorderBrush="{DynamicResource BorderSubtleBrush}"
+                          BorderThickness="1"
+                          CornerRadius="5"
+                          Padding="14"
+                          Margin="204,2,0,0">
+                    <StackPanel Spacing="10">
+                      <TextBlock Text="Playlist" Foreground="{DynamicResource TextSecondaryBrush}" />
+                      <WrapPanel>
+                        <Button Classes="templateField" Tag="PlaylistFilename|PlaylistNumber" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 7&#x0a;The track's position in the playlist, not its album track number."><TextBlock Text="Playlist Number" /></Button>
+                        <Button Classes="templateField" Tag="PlaylistFilename|PlaylistNumberPadded" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 0007&#x0a;Padded to match Playlist Total Tracks. This is playlist position, not album track number."><TextBlock Text="Playlist Number Padded" /></Button>
+                        <Button Classes="templateField" Tag="PlaylistFilename|PlaylistTotalTracks" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 1900&#x0a;Total tracks in this playlist download."><TextBlock Text="Playlist Total Tracks" /></Button>
+                        <Button Classes="templateField" Tag="PlaylistFilename|PlaylistTotalTracksPadded" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 1900&#x0a;Padded to match Playlist Number Padded."><TextBlock Text="Playlist Total Tracks Padded" /></Button>
+                        <Button Classes="templateField" Tag="PlaylistFilename|PlaylistTitle" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Road Trip&#x0a;Sanitized for safe filenames."><TextBlock Text="Playlist Title" /></Button>
+                      </WrapPanel>
+                      <TextBlock Text="Track / Album" Foreground="{DynamicResource TextSecondaryBrush}" />
+                      <WrapPanel>
+                        <Button Classes="templateField" Tag="PlaylistFilename|TrackArtist" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Example Artist"><TextBlock Text="Track Artist" /></Button>
+                        <Button Classes="templateField" Tag="PlaylistFilename|TrackTitle" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Example Track"><TextBlock Text="Track Title" /></Button>
+                        <Button Classes="templateField" Tag="PlaylistFilename|TrackComposer" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Example Track Composer&#x0a;Track-level composer only. Empty when Qobuz does not provide it."><TextBlock Text="Track Composer" /></Button>
+                        <Button Classes="templateField" Tag="PlaylistFilename|Version" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Remastered Edition&#x0a;Skipped when the title already includes it in the same file segment."><TextBlock Text="Version" /></Button>
+                        <Button Classes="templateField" Tag="PlaylistFilename|TrackNumber" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 1&#x0a;Original album track number, not playlist position."><TextBlock Text="Track Number" /></Button>
+                        <Button Classes="templateField" Tag="PlaylistFilename|TrackNumberPadded" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 01&#x0a;Original album track number, not playlist position."><TextBlock Text="Track Number Padded" /></Button>
+                        <Button Classes="templateField" Tag="PlaylistFilename|TotalTracks" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 10&#x0a;Original album total track count, not playlist total."><TextBlock Text="Total Tracks" /></Button>
+                        <Button Classes="templateField" Tag="PlaylistFilename|TotalTracksPadded" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 09&#x0a;Original album total track count, padded to match Track Number Padded."><TextBlock Text="Total Tracks Padded" /></Button>
+                        <Button Classes="templateField" Tag="PlaylistFilename|AlbumArtist" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Example Artist"><TextBlock Text="Album Artist" /></Button>
+                        <Button Classes="templateField" Tag="PlaylistFilename|AlbumTitle" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Example Album"><TextBlock Text="Album Title" /></Button>
+                        <Button Classes="templateField" Tag="PlaylistFilename|AlbumComposer" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: Example Album Composer&#x0a;Album-level composer only. Empty when Qobuz does not provide it."><TextBlock Text="Album Composer" /></Button>
+                        <Button Classes="templateField" Tag="PlaylistFilename|DiscNumber" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 1&#x0a;Original album disc number."><TextBlock Text="Disc Number" /></Button>
+                        <Button Classes="templateField" Tag="PlaylistFilename|DiscNumberPadded" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: 01&#x0a;Original album disc number."><TextBlock Text="Disc Number Padded" /></Button>
+                        <Button Classes="templateField" Tag="PlaylistFilename|Quality" Click="InsertTemplateField_OnClick" ToolTip.Tip="Ex: FLAC (24bit-96kHz)"><TextBlock Text="Quality" /></Button>
+                      </WrapPanel>
+                    </StackPanel>
+                  </Border>
+                    </StackPanel>
+                  </Border>
+                </StackPanel>
+                </Grid>
+              </Border>
+            </StackPanel>
+          </Border>
+
+          <Border Grid.Column="1"
+                  Classes="panel"
+                  Padding="18"
+                  VerticalAlignment="Top"
+                  IsVisible="{Binding UsesPlaylistTemplates}">
+            <Grid RowDefinitions="Auto,Auto" RowSpacing="12">
+              <TextBlock Text="Playlist Preview" FontSize="18" FontWeight="SemiBold" />
+              <Border Grid.Row="1"
+                      Background="#121416"
+                      BorderBrush="{DynamicResource BorderSubtleBrush}"
+                      BorderThickness="1"
+                      CornerRadius="5"
+                      Padding="12">
+                <controls:DestinationPreviewBox Text="{Binding PlaylistTemplatePreview}"
+                                                PreviewFontSize="13"
+                                                TextMargin="0,0,16,32"
+                                                MaxPreviewHeight="300"
+                                                VerticalScrollBarVisibility="Auto" />
+              </Border>
+            </Grid>
+          </Border>
+        </Grid>
+
+        <Border Classes="panel" Padding="18">
+          <StackPanel Spacing="12">
+            <TextBlock Text="Written Metadata" FontSize="18" FontWeight="SemiBold" />
+            <UniformGrid Columns="4" Rows="0">
+              <CheckBox Content="Album Artist" IsChecked="{Binding Settings.Tagging.WriteAlbumArtistTag}" ToolTip.Tip="Writes the main artist for the release." />
+              <CheckBox Content="Album Title" IsChecked="{Binding Settings.Tagging.WriteAlbumNameTag}" ToolTip.Tip="Writes the album/release title. Titles may already include edition text." />
+              <CheckBox Content="Track Artist" IsChecked="{Binding Settings.Tagging.WriteTrackArtistTag}" ToolTip.Tip="Writes the track artist when available, with album artist as fallback." />
+              <CheckBox Content="Track Title" IsChecked="{Binding Settings.Tagging.WriteTrackTitleTag}" ToolTip.Tip="Writes the track title without adding version text." />
+              <CheckBox Content="Release Year" IsChecked="{Binding Settings.Tagging.WriteReleaseYearTag}" ToolTip.Tip="Writes the year from the selected release date." />
+              <CheckBox Content="Release Type" IsChecked="{Binding Settings.Tagging.WriteReleaseTypeTag}" ToolTip.Tip="Writes the release category, such as album, single, EP, box set, or compilation." />
+              <CheckBox Content="Release Date" IsChecked="{Binding Settings.Tagging.WriteReleaseDateTag}" ToolTip.Tip="Writes the selected release date as YYYY-MM-DD." />
+              <CheckBox Content="Version" IsChecked="{Binding Settings.Tagging.WriteVersionTag}" ToolTip.Tip="Writes edition/version text when provided, such as remaster, mix, take, or demo." />
+              <CheckBox Content="Work" IsChecked="{Binding Settings.Tagging.WriteWorkTag}" ToolTip.Tip="Writes the track's work heading when provided." />
+              <CheckBox Content="Genre" IsChecked="{Binding Settings.Tagging.WriteGenreTag}" ToolTip.Tip="Writes Qobuz genre metadata. Values may be hierarchical or localized." />
+              <CheckBox Content="Track Number" IsChecked="{Binding Settings.Tagging.WriteTrackNumberTag}" ToolTip.Tip="Writes the track number from Qobuz." />
+              <CheckBox Content="Total Tracks" IsChecked="{Binding Settings.Tagging.WriteTrackTotalTag}" ToolTip.Tip="Writes the album-level total track count." />
+              <CheckBox Content="Disc Number" IsChecked="{Binding Settings.Tagging.WriteDiscNumberTag}" ToolTip.Tip="Writes the track's disc/media number." />
+              <CheckBox Content="Total Discs" IsChecked="{Binding Settings.Tagging.WriteDiscTotalTag}" ToolTip.Tip="Writes the album-level total disc count." />
+              <CheckBox Content="Composer" IsChecked="{Binding Settings.Tagging.WriteComposerTag}" ToolTip.Tip="Writes the track composer when available, with album composer as fallback." />
+              <CheckBox Content="Label" IsChecked="{Binding Settings.Tagging.WriteLabelTag}" ToolTip.Tip="Writes the release label. Labels can be short, long, or legal-looking depending on metadata." />
+              <CheckBox Content="Raw Qobuz Credits"
+                        IsChecked="{Binding Settings.Tagging.WriteRawQobuzCreditsTag}"
+                        ToolTip.Tip="Writes Qobuz's raw performer/credit string to FLAC INVOLVEDPEOPLE. Not written to MP3." />
+              <CheckBox Content="Copyright" IsChecked="{Binding Settings.Tagging.WriteCopyrightTag}" ToolTip.Tip="Writes copyright/legal text from Qobuz. This can be long." />
+              <CheckBox Content="UPC" IsChecked="{Binding Settings.Tagging.WriteUpcTag}" ToolTip.Tip="Writes the album UPC to BARCODE." />
+              <CheckBox Content="ISRC" IsChecked="{Binding Settings.Tagging.WriteIsrcTag}" ToolTip.Tip="Writes the track-level recording identifier." />
+              <CheckBox Content="Explicit Advisory" IsChecked="{Binding Settings.Tagging.WriteExplicitTag}" ToolTip.Tip="Writes an explicit advisory only when the track is explicit." />
+              <CheckBox Content="URL" IsChecked="{Binding Settings.Tagging.WriteUrlTag}" ToolTip.Tip="Writes the Qobuz album URL." />
+              <CheckBox Content="Comment" IsChecked="{Binding Settings.Tagging.WriteCommentTag}" ToolTip.Tip="Writes the custom comment text below." />
+            </UniformGrid>
+            <Grid ColumnDefinitions="190,*" RowDefinitions="Auto" RowSpacing="12">
+              <TextBlock Grid.Row="0" Grid.Column="0" Text="Comment Text" Foreground="{DynamicResource TextSecondaryBrush}" />
+              <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Settings.Tagging.CommentTag}" />
+            </Grid>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
+
+    <Button Classes="primary"
+            Command="{Binding SaveCommand}"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Margin="0,0,24,24"
+            MinWidth="120">
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <ic:FluentIcon Icon="Save"
+                       IconVariant="Regular"
+                       IconSize="Size24"
+                       FontSize="20"
+                       Foreground="{DynamicResource TextPrimaryBrush}" />
+        <TextBlock Text="Save" />
+      </StackPanel>
+    </Button>
+  </Grid>
+</UserControl>
+

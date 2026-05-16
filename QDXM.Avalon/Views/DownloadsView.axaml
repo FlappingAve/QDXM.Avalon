@@ -1,0 +1,377 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="using:QDXM.Avalon.Controls"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:vm="using:QDXM.Avalon.ViewModels"
+             x:Class="QDXM.Avalon.Views.DownloadsView"
+             x:DataType="vm:DownloadsViewModel"
+             x:CompileBindings="False">
+  <Grid ColumnDefinitions="*,350" RowDefinitions="Auto,*" Margin="18">
+    <Grid Grid.Column="0" Grid.Row="0" ColumnDefinitions="*,128,128,174" ColumnSpacing="10" Margin="0,0,14,0">
+      <Grid Grid.Column="0">
+        <TextBox Text="{Binding UrlText}"
+                 x:Name="UrlTextBox"
+                 KeyDown="UrlTextBox_OnKeyDown"
+                 Padding="42,8,12,8"
+                 PlaceholderText="Paste Qobuz album, track, or playlist URL" />
+        <ic:FluentIcon Icon="Link"
+                       IconVariant="Regular"
+                       IconSize="Size24"
+                       FontSize="18"
+                       Foreground="{DynamicResource TextMutedBrush}"
+                       Margin="16,0,0,0"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Center" />
+      </Grid>
+      <Button Grid.Column="1"
+              Classes="primary"
+              Command="{Binding DownloadUrlCommand}">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <ic:FluentIcon Icon="ArrowDownload"
+                         IconVariant="Regular"
+                         IconSize="Size24"
+                         FontSize="20"
+                         Foreground="{DynamicResource TextPrimaryBrush}" />
+          <TextBlock Text="Download" />
+        </StackPanel>
+      </Button>
+      <Button Grid.Column="2"
+              Classes="secondary"
+              Command="{Binding PauseAllCommand}">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <ic:FluentIcon Icon="Pause"
+                         IconVariant="Regular"
+                         IconSize="Size24"
+                         FontSize="20"
+                         Foreground="{DynamicResource TextPrimaryBrush}"
+                         IsVisible="{Binding IsQueueRunning}" />
+          <ic:FluentIcon Icon="Play"
+                         IconVariant="Regular"
+                         IconSize="Size24"
+                         FontSize="20"
+                         Foreground="{DynamicResource TextPrimaryBrush}"
+                         IsVisible="{Binding IsQueuePaused}" />
+          <TextBlock Text="{Binding PauseResumeButtonText}" />
+        </StackPanel>
+      </Button>
+      <Button Grid.Column="3"
+              Classes="secondary"
+              Command="{Binding ClearCompletedCommand}">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <ic:FluentIcon Icon="Delete"
+                         IconVariant="Regular"
+                         IconSize="Size24"
+                         FontSize="20"
+                         Foreground="{DynamicResource TextPrimaryBrush}" />
+          <TextBlock Text="Clear Completed" />
+        </StackPanel>
+      </Button>
+    </Grid>
+
+    <Grid Grid.Column="0" Grid.Row="1" RowDefinitions="44,*,38" Margin="0,18,14,0">
+      <Border Grid.Row="0"
+              Background="{DynamicResource TableHeaderBrush}"
+              BorderBrush="{DynamicResource BorderSubtleBrush}"
+              BorderThickness="1,1,1,0"
+              CornerRadius="5,5,0,0">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="36" />
+            <ColumnDefinition Width="76" />
+            <ColumnDefinition Width="2.4*" MinWidth="150" />
+            <ColumnDefinition Width="1.4*" MinWidth="110" />
+            <ColumnDefinition Width="104" />
+            <ColumnDefinition Width="60" />
+            <ColumnDefinition Width="96" />
+            <ColumnDefinition Width="*" MinWidth="52" MaxWidth="220" />
+            <ColumnDefinition Width="96" />
+          </Grid.ColumnDefinitions>
+
+          <Border Grid.Column="0" BorderBrush="{DynamicResource BorderQuietBrush}" BorderThickness="0,0,1,1" />
+          <Border Grid.Column="1" BorderBrush="{DynamicResource BorderQuietBrush}" BorderThickness="0,0,1,1">
+            <TextBlock Text="Type" Margin="12,0" VerticalAlignment="Center" FontWeight="Medium" />
+          </Border>
+          <Border Grid.Column="2" BorderBrush="{DynamicResource BorderQuietBrush}" BorderThickness="0,0,1,1">
+            <TextBlock Text="Title" Margin="12,0" VerticalAlignment="Center" FontWeight="Medium" />
+          </Border>
+          <Border Grid.Column="3" BorderBrush="{DynamicResource BorderQuietBrush}" BorderThickness="0,0,1,1">
+            <TextBlock Text="Artist" Margin="12,0" VerticalAlignment="Center" FontWeight="Medium" />
+          </Border>
+          <Border Grid.Column="4" BorderBrush="{DynamicResource BorderQuietBrush}" BorderThickness="0,0,1,1">
+            <TextBlock Text="Quality" Margin="12,0" VerticalAlignment="Center" FontWeight="Medium" />
+          </Border>
+          <Border Grid.Column="5" BorderBrush="{DynamicResource BorderQuietBrush}" BorderThickness="0,0,1,1">
+            <TextBlock Text="Tracks" Margin="8,0" VerticalAlignment="Center" FontWeight="Medium" />
+          </Border>
+          <Border Grid.Column="6" BorderBrush="{DynamicResource BorderQuietBrush}" BorderThickness="0,0,1,1">
+            <TextBlock Text="Status" Margin="12,0" VerticalAlignment="Center" FontWeight="Medium" />
+          </Border>
+          <Border Grid.Column="7" BorderBrush="{DynamicResource BorderQuietBrush}" BorderThickness="0,0,1,1">
+            <TextBlock Text="Progress" Margin="12,0" VerticalAlignment="Center" FontWeight="Medium" />
+          </Border>
+          <Border Grid.Column="8" BorderBrush="{DynamicResource BorderQuietBrush}" BorderThickness="0,0,0,1">
+            <TextBlock Text="Size" Margin="12,0" VerticalAlignment="Center" FontWeight="Medium" />
+          </Border>
+        </Grid>
+      </Border>
+
+      <DataGrid Grid.Row="1"
+                ItemsSource="{Binding QueueItems}"
+                SelectedItem="{Binding SelectedItem}"
+                AutoGenerateColumns="False"
+                HeadersVisibility="None"
+                IsReadOnly="True"
+                CanUserReorderColumns="False"
+                CanUserResizeColumns="False"
+                CanUserSortColumns="False"
+                SelectionMode="Single"
+                BorderThickness="1,0,1,1"
+                CornerRadius="0,0,5,5">
+        <DataGrid.Columns>
+          <DataGridTemplateColumn Header="" Width="36">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <Grid Width="32" Height="32" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-3,0,0">
+                  <Viewbox Width="27"
+                           Height="27"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           IsVisible="{Binding IsAlbum}">
+                    <Canvas Width="24" Height="24">
+                      <Rectangle Canvas.Left="3.5"
+                                 Canvas.Top="4"
+                                 Width="17"
+                                 Height="16"
+                                 RadiusX="1"
+                                 RadiusY="1"
+                                 Stroke="{DynamicResource TextSecondaryBrush}"
+                                 StrokeThickness="1.8" />
+                      <Ellipse Canvas.Left="13.2"
+                               Canvas.Top="7"
+                               Width="3.6"
+                               Height="3.6"
+                               Stroke="{DynamicResource TextSecondaryBrush}"
+                               StrokeThickness="1.7" />
+                      <Path Data="M5.5,17 L10,12.5 L13,15.5 L15.2,13.3 L19,17"
+                            Stroke="{DynamicResource TextSecondaryBrush}"
+                            StrokeThickness="1.8"
+                            StrokeLineCap="Round" />
+                    </Canvas>
+                  </Viewbox>
+
+                  <Viewbox Width="27"
+                           Height="27"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           IsVisible="{Binding IsTrack}">
+                    <Canvas Width="32" Height="32">
+                      <Path Data="M11,22 L11,8.2 L25,6.4 L25,20"
+                            Stroke="{DynamicResource TextSecondaryBrush}"
+                            StrokeThickness="2.2"
+                            StrokeLineCap="Round" />
+                      <Ellipse Canvas.Left="4"
+                               Canvas.Top="18.5"
+                               Width="8"
+                               Height="7"
+                               Stroke="{DynamicResource TextSecondaryBrush}"
+                               StrokeThickness="2.2" />
+                      <Ellipse Canvas.Left="18"
+                               Canvas.Top="16.5"
+                               Width="8"
+                               Height="7"
+                               Stroke="{DynamicResource TextSecondaryBrush}"
+                               StrokeThickness="2.2" />
+                    </Canvas>
+                  </Viewbox>
+
+                  <ic:FluentIcon Icon="List"
+                                 IconVariant="Regular"
+                                 IconSize="Size24"
+                                 FontSize="22"
+                                 Width="32"
+                                 Foreground="{DynamicResource TextSecondaryBrush}"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"
+                                 IsVisible="{Binding IsPlaylist}" />
+
+                  <ic:FluentIcon Icon="Star"
+                                 IconVariant="Regular"
+                                 IconSize="Size24"
+                                 FontSize="22"
+                                 Width="32"
+                                 Foreground="{DynamicResource TextSecondaryBrush}"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"
+                                 IsVisible="{Binding IsFavorites}" />
+
+                  <ic:FluentIcon Icon="Question"
+                                 IconVariant="Regular"
+                                 IconSize="Size24"
+                                 FontSize="22"
+                                 Width="32"
+                                 Foreground="{DynamicResource TextSecondaryBrush}"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"
+                                 IsVisible="{Binding IsUnknownType}" />
+                </Grid>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn Header="Type" Binding="{Binding TypeDisplay}" Width="92" />
+          <DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="2.4*" MinWidth="150" />
+          <DataGridTextColumn Header="Artist" Binding="{Binding Artist}" Width="1.4*" MinWidth="110" />
+          <DataGridTextColumn Header="Quality" Binding="{Binding QualityDisplay.Compact}" Width="76" />
+          <DataGridTextColumn Header="Tracks" Binding="{Binding TracksDisplay}" Width="60" />
+          <DataGridTemplateColumn Header="Status" Width="96">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding StatusDisplay}"
+                           Foreground="{Binding StatusBrush}"
+                           VerticalAlignment="Center" />
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTemplateColumn Header="Progress" Width="*" MinWidth="52" MaxWidth="220">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <Grid VerticalAlignment="Center"
+                      RowDefinitions="Auto,Auto"
+                      RowSpacing="6"
+                      MinWidth="42"
+                      MaxWidth="182">
+                  <TextBlock Text="{Binding ProgressText}"
+                             Foreground="{Binding ProgressBrush}" />
+                  <ProgressBar Grid.Row="1"
+                               Minimum="0"
+                               Maximum="1"
+                               Value="{Binding ProgressBarValue}"
+                               Foreground="{Binding ProgressBrush}"
+                               Height="7"
+                               MinWidth="42"
+                               HorizontalAlignment="Stretch" />
+                </Grid>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+          <DataGridTextColumn Header="Size" Binding="{Binding SizeDisplay}" Width="96" />
+        </DataGrid.Columns>
+      </DataGrid>
+
+      <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" Margin="16,0">
+        <TextBlock Grid.Column="0" Text="{Binding ItemCountText}" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
+        <TextBlock Grid.Column="2" Text="{Binding ActiveDownloadCountText}" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
+      </Grid>
+    </Grid>
+
+    <Grid Grid.Column="1" Grid.RowSpan="2" RowDefinitions="*,38">
+      <Border Grid.Row="0" Classes="panel" Padding="0" Margin="0,0,0,0">
+      <Grid RowDefinitions="*,64">
+        <ScrollViewer Grid.Row="0" Padding="20,20,20,16">
+          <StackPanel Spacing="17" Margin="0,0,0,72">
+          <Border Background="#050607" Height="236" CornerRadius="5" ClipToBounds="True">
+            <Image Source="{Binding SelectedItem.CoverArtImage}" Stretch="UniformToFill" />
+          </Border>
+          <StackPanel Spacing="7">
+            <Button Classes="link"
+                    HorizontalAlignment="Left"
+                    Command="{Binding OpenSelectedQobuzCommand}">
+              <TextBlock Text="{Binding SelectedItem.Title}"
+                         FontSize="19"
+                         FontWeight="SemiBold"
+                         TextWrapping="Wrap" />
+            </Button>
+            <TextBlock Text="{Binding SelectedItem.Artist}" Foreground="{DynamicResource AccentBlueBrush}" FontSize="15" />
+          </StackPanel>
+
+          <Border Classes="panel"
+                  Padding="12"
+                  IsVisible="{Binding HasSelectedItemError}">
+            <StackPanel Spacing="6">
+              <TextBlock Text="Error" Foreground="IndianRed" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding SelectedItem.ErrorMessage}" TextWrapping="Wrap" />
+            </StackPanel>
+          </Border>
+
+          <Border Classes="panel"
+                  Padding="12"
+                  IsVisible="{Binding HasSelectedItemWarning}">
+            <StackPanel Spacing="6">
+              <TextBlock Text="Warning" Foreground="Yellow" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding SelectedItem.WarningMessage}" TextWrapping="Wrap" />
+            </StackPanel>
+          </Border>
+
+          <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="118,*" RowSpacing="15">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Quality" Foreground="{DynamicResource TextSecondaryBrush}" />
+            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedItem.QualityDisplay.Full}" FontWeight="Medium" />
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Release Date" Foreground="{DynamicResource TextSecondaryBrush}" />
+            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedItem.ReleaseDate}" FontWeight="Medium" />
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="UPC" Foreground="{DynamicResource TextSecondaryBrush}" />
+            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedItem.Upc}" FontWeight="Medium" />
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Tracks" Foreground="{DynamicResource TextSecondaryBrush}" />
+            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedItem.TracksDetailText}" FontWeight="Medium" />
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="Current Track" Foreground="{DynamicResource TextSecondaryBrush}" />
+            <TextBlock Grid.Row="4"
+                       Grid.Column="1"
+                       Text="{Binding SelectedItem.CurrentTrackTitle}"
+                       TextTrimming="CharacterEllipsis"
+                       MaxLines="1"
+                       FontWeight="Medium" />
+          </Grid>
+
+          <TextBlock Text="Destination" Foreground="{DynamicResource TextSecondaryBrush}" />
+          <Border Classes="panel" Padding="10">
+            <controls:DestinationPreviewBox Text="{Binding SelectedDestinationPreview}" />
+          </Border>
+          </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Row="1"
+                BorderThickness="0,1,0,0"
+                BorderBrush="{DynamicResource BorderSubtleBrush}"
+                Background="{DynamicResource PanelBackgroundBrush}"
+                Padding="16,10,30,10">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Classes="primary"
+                    Command="{Binding RetrySelectedCommand}"
+                    IsVisible="{Binding IsSelectedItemRetryable}"
+                    Padding="11,8">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <ic:FluentIcon Icon="ArrowClockwise"
+                               IconVariant="Regular"
+                               IconSize="Size24"
+                               FontSize="20"
+                               Foreground="{DynamicResource TextPrimaryBrush}" />
+                <TextBlock Text="Retry" />
+              </StackPanel>
+            </Button>
+            <Button Classes="secondary"
+                    Command="{Binding OpenSelectedFolderCommand}"
+                    Padding="11,8">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <ic:SymbolIcon Symbol="Folder"
+                               IconVariant="Regular"
+                               FontSize="18"
+                               Foreground="{DynamicResource TextPrimaryBrush}" />
+                <TextBlock Text="Open Folder" />
+              </StackPanel>
+            </Button>
+            <Button Classes="secondary"
+                    Command="{Binding RemoveSelectedCommand}"
+                    Padding="11,8">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <ic:FluentIcon Icon="Delete"
+                               IconVariant="Regular"
+                               IconSize="Size24"
+                               FontSize="20"
+                               Foreground="{DynamicResource TextPrimaryBrush}" />
+                <TextBlock Text="Remove" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </Border>
+      </Grid>
+      </Border>
+    </Grid>
+  </Grid>
+</UserControl>

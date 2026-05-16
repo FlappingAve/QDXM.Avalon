@@ -1,0 +1,64 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Styles.Resources>
+    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#101214" />
+    <SolidColorBrush x:Key="TitleBarBackgroundBrush" Color="#181b1f" />
+    <SolidColorBrush x:Key="SidebarBackgroundBrush" Color="#17191c" />
+    <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#181a1c" />
+    <SolidColorBrush x:Key="PanelBackgroundAltBrush" Color="#202327" />
+    <SolidColorBrush x:Key="PanelSelectedBrush" Color="#17263a" />
+    <SolidColorBrush x:Key="PanelHoverBrush" Color="#20262d" />
+    <SolidColorBrush x:Key="TableHeaderBrush" Color="#222529" />
+    <SolidColorBrush x:Key="BorderSubtleBrush" Color="#2d333a" />
+    <SolidColorBrush x:Key="BorderQuietBrush" Color="#24282e" />
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#f4f7fb" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#b4bfcc" />
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#768292" />
+    <SolidColorBrush x:Key="AccentBlueBrush" Color="#3489ff" />
+    <SolidColorBrush x:Key="AccentBlueDarkBrush" Color="#183f73" />
+    <SolidColorBrush x:Key="AccentBlueSoftBrush" Color="#1b4f8d" />
+    <SolidColorBrush x:Key="StatusGreenBrush" Color="#74c746" />
+    <SolidColorBrush x:Key="StatusAmberBrush" Color="#ffad3f" />
+    <SolidColorBrush x:Key="StatusRedBrush" Color="#e45f5f" />
+    <SolidColorBrush x:Key="ProgressTrackBrush" Color="#2b3035" />
+    <SolidColorBrush x:Key="ProgressTrackMutedBrush" Color="#25292e" />
+    <SolidColorBrush x:Key="DataGridRowHoveredBackgroundColor" Color="#20262d" />
+    <SolidColorBrush x:Key="DataGridRowSelectedBackgroundBrush" Color="#17263a" />
+    <SolidColorBrush x:Key="DataGridRowSelectedHoveredBackgroundBrush" Color="#1c3048" />
+    <SolidColorBrush x:Key="DataGridRowSelectedUnfocusedBackgroundBrush" Color="#17263a" />
+    <SolidColorBrush x:Key="DataGridRowSelectedHoveredUnfocusedBackgroundBrush" Color="#1c3048" />
+    <SolidColorBrush x:Key="DataGridCellFocusVisualPrimaryBrush" Color="Transparent" />
+    <SolidColorBrush x:Key="DataGridCellFocusVisualSecondaryBrush" Color="Transparent" />
+    <SolidColorBrush x:Key="DataGridGridLinesBrush" Color="#24282e" />
+    <x:Double x:Key="DataGridRowSelectedBackgroundOpacity">1</x:Double>
+    <x:Double x:Key="DataGridRowSelectedHoveredBackgroundOpacity">1</x:Double>
+    <x:Double x:Key="DataGridRowSelectedUnfocusedBackgroundOpacity">1</x:Double>
+    <x:Double x:Key="DataGridRowSelectedHoveredUnfocusedBackgroundOpacity">1</x:Double>
+
+    <LinearGradientBrush x:Key="AppSurfaceBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+      <GradientStop Color="#151719" Offset="0" />
+      <GradientStop Color="#101214" Offset="0.48" />
+      <GradientStop Color="#181a1c" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="TitleSurfaceBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+      <GradientStop Color="#20242a" Offset="0" />
+      <GradientStop Color="#171a1e" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="SidebarSurfaceBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+      <GradientStop Color="#1a1c20" Offset="0" />
+      <GradientStop Color="#14171a" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="PanelSurfaceBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+      <GradientStop Color="#1e2124" Offset="0" />
+      <GradientStop Color="#17191b" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="ButtonSurfaceBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+      <GradientStop Color="#2a2d32" Offset="0" />
+      <GradientStop Color="#202327" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="PrimaryButtonSurfaceBrush" StartPoint="0%,0%" EndPoint="0%,100%">
+      <GradientStop Color="#3a93ff" Offset="0" />
+      <GradientStop Color="#1f66c6" Offset="1" />
+    </LinearGradientBrush>
+  </Styles.Resources>
+</Styles>

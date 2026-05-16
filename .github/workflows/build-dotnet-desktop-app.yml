@@ -1,40 +1,44 @@
-name: Build QobuzDownloaderX-MOD
+name: Build QDXM Avalon
 
 on:
   workflow_dispatch:
-  # push:
-  #   branches:
-  #     - "master"
 
 jobs:
   build:
     runs-on: windows-2022
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4.1.7
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-    # - name: Setup .NET
-    #   uses: actions/setup-dotnet@v1.5.0
-    #   with:
-    #     dotnet-version: 4.8
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
 
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
+      - name: Test
+        run: dotnet test "QDXM.Avalon.Tests\QDXM.Avalon.Tests.csproj" -c Release --results-directory "Testing\TestResults"
 
-    - name: Setup NuGet
-      uses: nuget/setup-nuget@v2.0.0
-    
-    - name: Restore NuGet Packages
-      run: nuget restore QobuzDownloaderX.sln
+      - name: Publish framework-dependent build
+        run: dotnet publish "QDXM.Avalon\QDXM.Avalon.csproj" -c Release -r win-x64 --self-contained false -o "artifacts\QDXM.Avalon-win-x64"
 
-    - name: Build Solutions
-      run: |
-        msbuild.exe QobuzDownloaderX.sln /p:platform="Any CPU" /p:configuration="Release"
+      - name: Publish self-contained build
+        run: dotnet publish "QDXM.Avalon\QDXM.Avalon.csproj" -c Release -r win-x64 --self-contained true -o "artifacts\QDXM.Avalon-win-x64-With-Runtime"
 
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4.3.6
-      with:
-        name: QBDLX-MOD_${{github.ref_name}}
-        path: QobuzDownloaderX\bin\Release
+      - name: Zip framework-dependent build
+        shell: pwsh
+        run: Compress-Archive -Path "artifacts\QDXM.Avalon-win-x64\*" -DestinationPath "artifacts\QDXM.Avalon-${{ github.ref_name }}.zip"
 
+      - name: Zip self-contained build
+        shell: pwsh
+        run: Compress-Archive -Path "artifacts\QDXM.Avalon-win-x64-With-Runtime\*" -DestinationPath "artifacts\QDXM.Avalon-${{ github.ref_name }}-With-Runtime.zip"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: QDXM.Avalon-${{ github.ref_name }}
+          path: |
+            artifacts/QDXM.Avalon-${{ github.ref_name }}.zip
+            artifacts/QDXM.Avalon-${{ github.ref_name }}-With-Runtime.zip

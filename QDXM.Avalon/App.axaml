@@ -1,0 +1,29 @@
+﻿<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="QDXM.Avalon.App"
+             xmlns:chrome="using:Avalonia.Controls.Chrome"
+             xmlns:local="using:QDXM.Avalon"
+             RequestedThemeVariant="Dark">
+
+    <Application.DataTemplates>
+        <local:ViewLocator/>
+    </Application.DataTemplates>
+  
+    <Application.Styles>
+        <FluentTheme />
+        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
+        <StyleInclude Source="avares://QDXM.Avalon/Styles/Colors.axaml" />
+        <StyleInclude Source="avares://QDXM.Avalon/Styles/Controls.axaml" />
+        <Style Selector="chrome|WindowDrawnDecorations /template/ Panel#PART_TitleTextPanel TextBlock">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="chrome|WindowDrawnDecorations /template/ Button#PART_FullScreenButton">
+            <Setter Property="IsVisible" Value="False" />
+            <Setter Property="Width" Value="0" />
+        </Style>
+        <Style Selector="chrome|WindowDrawnDecorations /template/ Button#PART_PopoverFullScreenButton">
+            <Setter Property="IsVisible" Value="False" />
+            <Setter Property="Width" Value="0" />
+        </Style>
+    </Application.Styles>
+</Application>

@@ -1,0 +1,70 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\qdxm-avalon.ico</ApplicationIcon>
+    <AssemblyName>QDXM.Avalon</AssemblyName>
+    <RootNamespace>QDXM.Avalon</RootNamespace>
+    <Title>QDXM Avalon</Title>
+    <Product>QDXM Avalon</Product>
+    <Description>QDXM Avalon desktop downloader</Description>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
+    <CopyDebugSymbolFilesFromPackages>false</CopyDebugSymbolFilesFromPackages>
+    <CopyDocumentationFilesFromPackages>false</CopyDocumentationFilesFromPackages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE"
+          Link="LICENSE"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\THIRD-PARTY-NOTICES.md"
+          Link="THIRD-PARTY-NOTICES.md"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.0.2" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.0.0" />
+    <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="12.0.0" />
+    <PackageReference Include="Avalonia.HarfBuzz" Version="12.0.2" />
+    <PackageReference Include="Avalonia.Skia" Version="12.0.2" />
+    <PackageReference Include="Avalonia.Win32" Version="12.0.2" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.2" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.2" />
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.1">
+      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1" />
+    <PackageReference Include="FluentIcons.Avalonia" Version="2.1.326" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\QDXM.Avalon.Core\QDXM.Avalon.Core.csproj" />
+  </ItemGroup>
+
+  <Target Name="RemoveDebugAndDocumentationFilesFromReleasePublish"
+          AfterTargets="ComputeFilesToPublish"
+          BeforeTargets="_ComputeResolvedFilesToPublishTypes"
+          Condition="'$(Configuration)' == 'Release'">
+    <ItemGroup>
+      <_DebugAndDocumentationFilesToDrop Include="@(ResolvedFileToPublish)"
+                                         Condition="'%(ResolvedFileToPublish.Extension)' == '.pdb' or '%(ResolvedFileToPublish.Extension)' == '.xml'" />
+      <ResolvedFileToPublish Remove="@(_DebugAndDocumentationFilesToDrop)" />
+    </ItemGroup>
+  </Target>
+</Project>

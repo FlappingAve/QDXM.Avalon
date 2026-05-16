@@ -1,0 +1,80 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:behaviors="using:QDXM.Avalon.Behaviors"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:vm="using:QDXM.Avalon.ViewModels"
+             x:Class="QDXM.Avalon.Views.LogsView"
+             x:DataType="vm:LogsViewModel"
+             x:CompileBindings="False">
+  <Grid RowDefinitions="Auto,*" Margin="24" RowSpacing="16">
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+      <StackPanel Grid.Column="0" Spacing="4">
+        <TextBlock Text="Logs" FontSize="28" FontWeight="SemiBold" />
+        <TextBlock Text="{Binding EntryCountText}" Foreground="{DynamicResource TextSecondaryBrush}" />
+      </StackPanel>
+      <Button Grid.Column="2" Classes="secondary" Command="{Binding ClearCommand}">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <ic:FluentIcon Icon="Delete"
+                         IconVariant="Regular"
+                         IconSize="Size24"
+                         FontSize="20"
+                         Foreground="{DynamicResource TextPrimaryBrush}" />
+          <TextBlock Text="Clear" />
+        </StackPanel>
+      </Button>
+    </Grid>
+
+    <Border Grid.Row="1" Classes="panel">
+      <ScrollViewer Classes="stableHorizontalScroll"
+                    AllowAutoHide="False"
+                    HorizontalScrollBarVisibility="Auto"
+                    VerticalScrollBarVisibility="Auto"
+                    behaviors:MiddlePan.IsEnabled="True">
+        <DataGrid ItemsSource="{Binding Entries}"
+                  x:Name="LogsGrid"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  SelectionMode="Extended"
+                  ClipboardCopyMode="IncludeHeader"
+                  GridLinesVisibility="Horizontal"
+                  HorizontalScrollBarVisibility="Disabled"
+                  VerticalScrollBarVisibility="Disabled">
+          <DataGrid.ContextMenu>
+            <ContextMenu>
+              <MenuItem Header="Copy Selected Rows" Click="CopySelectedLogRows_OnClick" />
+              <MenuItem Header="Copy Selected Messages" Click="CopySelectedLogMessages_OnClick" />
+              <MenuItem Header="Copy All Rows" Click="CopyAllLogRows_OnClick" />
+            </ContextMenu>
+          </DataGrid.ContextMenu>
+          <DataGrid.Columns>
+            <DataGridTextColumn Header="Time" Binding="{Binding TimestampText}" Width="180" />
+            <DataGridTemplateColumn Width="100" ClipboardContentBinding="{Binding Level}">
+              <DataGridTemplateColumn.HeaderTemplate>
+                <DataTemplate>
+                  <TextBlock Text="Level"
+                             HorizontalAlignment="Center"
+                             TextAlignment="Center" />
+                </DataTemplate>
+              </DataGridTemplateColumn.HeaderTemplate>
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate>
+                  <Grid MinHeight="55"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch">
+                    <TextBlock Text="{Binding Level}"
+                               Foreground="{Binding LevelBrush}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               TextAlignment="Center" />
+                  </Grid>
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTextColumn Header="Source" Binding="{Binding Source}" Width="140" />
+            <DataGridTextColumn Header="Message" Binding="{Binding Message}" Width="SizeToCells" MinWidth="900" />
+          </DataGrid.Columns>
+        </DataGrid>
+      </ScrollViewer>
+    </Border>
+  </Grid>
+</UserControl>

@@ -1,0 +1,543 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:behaviors="using:QDXM.Avalon.Behaviors"
+             xmlns:controls="using:QDXM.Avalon.Controls"
+             xmlns:ic="using:FluentIcons.Avalonia"
+             xmlns:vm="using:QDXM.Avalon.ViewModels"
+             x:Class="QDXM.Avalon.Views.SearchView"
+             x:DataType="vm:SearchViewModel"
+             x:CompileBindings="False">
+  <Grid ColumnDefinitions="*,320" RowDefinitions="Auto,*" Margin="18">
+    <Border Grid.Row="0"
+            Grid.Column="0"
+            Classes="searchToolbar"
+            Margin="0,0,14,0"
+            Padding="14">
+      <Grid RowDefinitions="Auto,Auto" RowSpacing="14">
+      <Grid ColumnDefinitions="174,*,132" ColumnSpacing="12">
+        <ComboBox Grid.Column="0"
+                  ItemsSource="{Binding TypeOptions}"
+                  SelectedItem="{Binding SelectedType}" />
+        <Grid Grid.Column="1">
+          <TextBox Text="{Binding Query}"
+                   KeyDown="SearchTextBox_OnKeyDown"
+                   Padding="42,8,12,8"
+                   PlaceholderText="{Binding SearchPlaceholderText}" />
+          <ic:FluentIcon Icon="Search"
+                         IconVariant="Regular"
+                         IconSize="Size24"
+                         FontSize="18"
+                         Foreground="{DynamicResource TextMutedBrush}"
+                         Margin="16,0,0,0"
+                         HorizontalAlignment="Left"
+                         VerticalAlignment="Center" />
+        </Grid>
+        <Button Grid.Column="2"
+                Classes="primary"
+                Command="{Binding SearchCommand}"
+                Click="SearchButton_OnClick">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <ic:FluentIcon Icon="Search"
+                           IconVariant="Regular"
+                           IconSize="Size24"
+                           FontSize="20"
+                           Foreground="{DynamicResource TextPrimaryBrush}" />
+            <TextBlock Text="Search" />
+          </StackPanel>
+        </Button>
+      </Grid>
+      <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,Auto,*" ColumnSpacing="18">
+        <StackPanel Grid.Column="0"
+                    Orientation="Horizontal"
+                    Spacing="8"
+                    IsVisible="{Binding IsArtistAlbumSortVisible}">
+          <TextBlock Text="Sort:"
+                     VerticalAlignment="Center"
+                     Foreground="{DynamicResource TextSecondaryBrush}"
+                     ToolTip.Tip="Server-side Qobuz ordering for artist albums. Newest-ish favors recent official releases but can include singles, remixes, and variants. Relevance is cleaner for main albums but is not chronological." />
+          <ComboBox Width="126"
+                    ItemsSource="{Binding SortOptions}"
+                    SelectedItem="{Binding SelectedSort}"
+                    ToolTip.Tip="Server-side Qobuz ordering for artist albums. Newest-ish favors recent official releases but can include singles, remixes, and variants. Relevance is cleaner for main albums but is not chronological." />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+          <TextBlock Text="Arrange by:"
+                     VerticalAlignment="Center"
+                     Foreground="{DynamicResource TextSecondaryBrush}"
+                     ToolTip.Tip="Arranges the results already loaded. Load More appends the next page using the current arrangement; changing this later rearranges everything loaded so far." />
+          <ComboBox Width="138"
+                    ItemsSource="{Binding ArrangeByOptions}"
+                    SelectedItem="{Binding SelectedArrangeBy}"
+                    ToolTip.Tip="Arranges the results already loaded. Load More appends the next page using the current arrangement; changing this later rearranges everything loaded so far." />
+        </StackPanel>
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+          <TextBlock Text="Results per page:"
+                     VerticalAlignment="Center"
+                     Foreground="{DynamicResource TextSecondaryBrush}" />
+          <ComboBox Width="88" ItemsSource="{Binding LimitOptions}" SelectedItem="{Binding SelectedLimit}" />
+        </StackPanel>
+      </Grid>
+      </Grid>
+    </Border>
+
+    <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="*,40" Margin="0,18,14,0">
+      <Grid Grid.Row="0">
+        <ScrollViewer x:Name="SearchResultsScrollViewer"
+                      Classes="searchResultsScroll stableVerticalScroll"
+                      Background="Transparent"
+                      Focusable="True"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      AllowAutoHide="False"
+                      behaviors:MiddlePan.IsEnabled="True"
+                      behaviors:MiddlePan.Axes="Vertical"
+                      behaviors:MiddlePan.IgnoredAncestorClass="expandedTracksScroll"
+                      KeyDown="SearchResultsScroll_OnKeyDown"
+                      PointerPressed="SearchResultsScroll_OnPointerPressed">
+          <ItemsRepeater x:Name="SearchResultsRepeater"
+                         ItemsSource="{Binding Results}">
+            <ItemsRepeater.Layout>
+              <StackLayout Orientation="Vertical" />
+            </ItemsRepeater.Layout>
+            <ItemsRepeater.ItemTemplate>
+              <DataTemplate>
+                <Border Classes="panel searchResult"
+                        Tag="{Binding IsSelected}"
+                        Margin="0,0,0,8"
+                        Padding="12"
+                        AttachedToVisualTree="SearchResult_OnAttachedToVisualTree"
+                        DetachedFromVisualTree="SearchResult_OnDetachedFromVisualTree"
+                        DataContextChanged="SearchResult_OnDataContextChanged">
+                <Grid RowDefinitions="Auto,Auto">
+                  <Border Grid.RowSpan="2"
+                          Width="46"
+                          Margin="-12,-12,0,-12"
+                          HorizontalAlignment="Left"
+                          Background="Transparent"
+                          IsVisible="{Binding CanExpand}"
+                          PointerPressed="SearchResultHeader_OnPointerPressed"
+                          ZIndex="1" />
+                  <Grid ColumnDefinitions="34,96,*,96,96,76,114,114"
+                        ColumnSpacing="8"
+                        Background="Transparent"
+                        PointerPressed="SearchResultHeader_OnPointerPressed">
+                    <Button Grid.Column="0"
+                            Command="{Binding ToggleExpandedCommand}"
+                            IsVisible="{Binding CanExpand}"
+                            IsHitTestVisible="False"
+                            Classes="secondary"
+                            Padding="0">
+                      <Grid>
+                        <ic:FluentIcon Icon="ChevronRight"
+                                       IconVariant="Regular"
+                                       IconSize="Size24"
+                                       FontSize="18"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       IsVisible="{Binding IsCollapsed}" />
+                        <ic:FluentIcon Icon="ChevronDown"
+                                       IconVariant="Regular"
+                                       IconSize="Size24"
+                                       FontSize="18"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                       IsVisible="{Binding IsExpanded}" />
+                      </Grid>
+                    </Button>
+                    <Border Grid.Column="1" Background="#050607" Width="90" Height="72" CornerRadius="3">
+                      <Image Source="{Binding ThumbnailImage}" Stretch="UniformToFill" />
+                    </Border>
+                    <StackPanel Grid.Column="2"
+                                Grid.ColumnSpan="3"
+                                VerticalAlignment="Center"
+                                Spacing="4"
+                                IsVisible="{Binding IsEntityResult}">
+                      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <TextBlock Text="{Binding DisplayTitle}"
+                                   Grid.Column="0"
+                                   FontSize="17"
+                                   FontWeight="SemiBold"
+                                   TextTrimming="CharacterEllipsis"
+                                   MaxLines="1" />
+                      </Grid>
+                      <TextBlock Text="{Binding Artist}"
+                                 FontStyle="Italic"
+                                 Foreground="{DynamicResource TextSecondaryBrush}"
+                                 TextTrimming="CharacterEllipsis"
+                                 MaxLines="1" />
+                    </StackPanel>
+                    <Grid Grid.Column="2"
+                          Grid.ColumnSpan="4"
+                          VerticalAlignment="Center"
+                          RowDefinitions="Auto,Auto,Auto,Auto"
+                          ColumnDefinitions="*,96,96,76"
+                          ColumnSpacing="8"
+                          RowSpacing="4"
+                          IsVisible="{Binding IsNotEntityResult}">
+                      <Grid Grid.Row="0" Grid.ColumnSpan="4" ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                        <Border Background="{DynamicResource StatusRedBrush}"
+                                Grid.Column="0"
+                                CornerRadius="2"
+                                Padding="4,1"
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding Explicit}">
+                          <TextBlock Text="E" FontSize="11" />
+                        </Border>
+                        <TextBlock Text="{Binding DisplayTitle}"
+                                   Grid.Column="1"
+                                   FontSize="17"
+                                   FontWeight="SemiBold"
+                                   TextTrimming="CharacterEllipsis"
+                                   MaxLines="1" />
+                      </Grid>
+                      <TextBlock Text="{Binding Version}"
+                                 Grid.Row="1"
+                                 Grid.Column="0"
+                                 Foreground="{DynamicResource TextSecondaryBrush}"
+                                 TextTrimming="CharacterEllipsis"
+                                 MaxLines="1"
+                                 IsVisible="{Binding HasVersion}" />
+                      <TextBlock Text="{Binding Artist}"
+                                 Grid.Row="2"
+                                 Grid.Column="0"
+                                 FontStyle="Italic"
+                                 Foreground="{DynamicResource TextSecondaryBrush}"
+                                 TextTrimming="CharacterEllipsis"
+                                 MaxLines="1" />
+                      <TextBlock Text="{Binding SelectedTrackSummary}"
+                                 Grid.Row="3"
+                                 Grid.ColumnSpan="4"
+                                 Foreground="{DynamicResource AccentBlueBrush}"
+                                 IsVisible="{Binding HasSelectedTrackSummary}" />
+                      <TextBlock Grid.Row="2"
+                                 Grid.Column="1"
+                                 Text="{Binding ReleaseDate}"
+                                 Foreground="{DynamicResource TextSecondaryBrush}" />
+                      <TextBlock Grid.Row="2"
+                                 Grid.Column="2"
+                                 Text="{Binding Quality}" />
+                      <TextBlock Grid.Row="2"
+                                 Grid.Column="3"
+                                 Text="{Binding TracksDisplay}" />
+                    </Grid>
+                    <TextBlock Grid.Column="5" Text="{Binding TracksDisplay}" VerticalAlignment="Center" IsVisible="{Binding IsEntityResult}" />
+                    <Button Grid.Column="6"
+                            Classes="primary"
+                            Command="{Binding DownloadAlbumCommand}"
+                            Padding="12,8"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center">
+                      <StackPanel Orientation="Horizontal" Spacing="7" VerticalAlignment="Center">
+                        <ic:FluentIcon Icon="ArrowDownload"
+                                       IconVariant="Regular"
+                                       IconSize="Size24"
+                                       FontSize="20"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       VerticalAlignment="Center"
+                                       IsVisible="{Binding HasPrimaryActionIcon}" />
+                        <TextBlock Text="{Binding PrimaryActionText}" />
+                      </StackPanel>
+                    </Button>
+                    <Button Grid.Column="7"
+                            Classes="selectedDownload"
+                            Command="{Binding DownloadSelectedCommand}"
+                            IsVisible="{Binding CanShowDownloadSelected}"
+                            Padding="11,8">
+                      <StackPanel Orientation="Horizontal" Spacing="7">
+                        <ic:FluentIcon Icon="ArrowDownload"
+                                       IconVariant="Regular"
+                                       IconSize="Size24"
+                                       FontSize="20"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" />
+                        <TextBlock Text="Selected" />
+                      </StackPanel>
+                    </Button>
+                  </Grid>
+
+                  <Grid Grid.Row="1" IsVisible="{Binding AlbumExpandedTrackListVisible}" Margin="46,12,0,0">
+                    <ScrollViewer Classes="expandedTracksScroll stableVerticalScroll"
+                                  MaxHeight="560"
+                                  Focusable="True"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  AllowAutoHide="False"
+                                  behaviors:MiddlePan.IsEnabled="True"
+                                  behaviors:MiddlePan.Axes="Vertical"
+                                  AttachedToVisualTree="ExpandedTracksScroll_OnAttachedToVisualTree"
+                                  DetachedFromVisualTree="ExpandedTracksScroll_OnDetachedFromVisualTree"
+                                  KeyDown="ExpandedTracksScroll_OnKeyDown"
+                                  PointerPressed="ExpandedTracksScroll_OnPointerPressed"
+                                  PointerWheelChanged="ExpandedTracksScroll_OnPointerWheelChanged">
+                      <Grid RowDefinitions="34,*">
+                        <Grid Grid.Row="0"
+                              Classes="stickyExpandedTrackHeader"
+                              ColumnDefinitions="*,24"
+                              MinHeight="36"
+                              Background="#202326"
+                              ZIndex="1">
+                          <Grid Grid.Column="0"
+                                ColumnDefinitions="46,60,*,120,130">
+                            <CheckBox Grid.Column="0"
+                                      IsChecked="{Binding AllTracksSelected}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="#" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Text="Track Title" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="3" Text="Duration" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="4" Text="Quality" VerticalAlignment="Center" />
+                          </Grid>
+                        </Grid>
+                        <ItemsControl Grid.Row="1" ItemsSource="{Binding AlbumTrackRows}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                              <Grid ColumnDefinitions="*,24" Background="#191b1e">
+                                <Grid Grid.Column="0">
+                                  <TextBlock Text="{Binding HeaderText}"
+                                             FontWeight="SemiBold"
+                                             Margin="14,12,0,6"
+                                             IsVisible="{Binding IsDiscHeader}" />
+                                  <TextBlock Text="{Binding HeaderText}"
+                                             Foreground="{DynamicResource TextSecondaryBrush}"
+                                             TextTrimming="CharacterEllipsis"
+                                             MaxLines="1"
+                                             Margin="14,10,0,6"
+                                             IsVisible="{Binding IsWorkHeader}" />
+                                  <Grid ColumnDefinitions="46,60,*,120,130"
+                                        RowDefinitions="36,Auto"
+                                        IsVisible="{Binding IsTrack}">
+                                    <CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding Track.IsSelected}" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Track.TrackNumberDisplay}" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Row="0"
+                                               Grid.Column="2"
+                                               Text="{Binding Track.Title}"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis"
+                                               MaxLines="1" />
+                                    <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding Track.Duration}" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Row="0" Grid.Column="4" Text="{Binding Track.Quality}" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Row="1"
+                                               Grid.Column="2"
+                                               Grid.ColumnSpan="3"
+                                               Text="{Binding Track.Version}"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                               TextTrimming="CharacterEllipsis"
+                                               MaxLines="1"
+                                               Margin="0,0,0,8"
+                                               IsVisible="{Binding Track.HasVersion}" />
+                                  </Grid>
+                                </Grid>
+                              </Grid>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </Grid>
+                    </ScrollViewer>
+                  </Grid>
+
+                  <Grid Grid.Row="1" IsVisible="{Binding PlaylistExpandedTrackListVisible}" Margin="46,12,0,0">
+                    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8">
+                      <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
+                        <TextBlock Grid.Column="0"
+                                   Text="{Binding TrackRangeText}"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   VerticalAlignment="Center" />
+                        <Button Grid.Column="1"
+                                Classes="secondary"
+                                Command="{Binding PreviousTrackPageCommand}"
+                                IsEnabled="{Binding CanGoPreviousTrackPage}"
+                                Padding="10,5">
+                          <TextBlock Text="Previous" />
+                        </Button>
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding TrackPageText}"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   VerticalAlignment="Center" />
+                        <Button Grid.Column="3"
+                                Classes="secondary"
+                                Command="{Binding NextTrackPageCommand}"
+                                IsEnabled="{Binding CanGoNextTrackPage}"
+                                Padding="10,5">
+                          <TextBlock Text="Next" />
+                        </Button>
+                      </Grid>
+                      <ScrollViewer Grid.Row="1"
+                                    Classes="expandedTracksScroll stableVerticalScroll"
+                                    MaxHeight="560"
+                                    Focusable="True"
+                                    VerticalScrollBarVisibility="Auto"
+                                    HorizontalScrollBarVisibility="Disabled"
+                                    AllowAutoHide="False"
+                                    behaviors:MiddlePan.IsEnabled="True"
+                                    behaviors:MiddlePan.Axes="Vertical"
+                                    AttachedToVisualTree="ExpandedTracksScroll_OnAttachedToVisualTree"
+                                    DetachedFromVisualTree="ExpandedTracksScroll_OnDetachedFromVisualTree"
+                                    KeyDown="ExpandedTracksScroll_OnKeyDown"
+                                    PointerPressed="ExpandedTracksScroll_OnPointerPressed"
+                                    PointerWheelChanged="ExpandedTracksScroll_OnPointerWheelChanged">
+                        <Grid RowDefinitions="34,*">
+                          <Grid Grid.Row="0"
+                                Classes="stickyExpandedTrackHeader"
+                                ColumnDefinitions="*,24"
+                                MinHeight="36"
+                                Background="#202326"
+                                ZIndex="1">
+                            <Grid Grid.Column="0"
+                                  ColumnDefinitions="46,68,2*,1.5*,1.7*,92">
+                              <CheckBox Grid.Column="0"
+                                        IsChecked="{Binding AllTracksSelected}"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center" />
+                              <TextBlock Grid.Column="1" Text="#" VerticalAlignment="Center" />
+                              <TextBlock Grid.Column="2" Text="Track Title" VerticalAlignment="Center" />
+                              <TextBlock Grid.Column="3" Text="Artist" VerticalAlignment="Center" />
+                              <TextBlock Grid.Column="4" Text="Album" VerticalAlignment="Center" />
+                              <TextBlock Grid.Column="5" Text="Duration" VerticalAlignment="Center" />
+                            </Grid>
+                          </Grid>
+                          <ItemsControl Grid.Row="1" ItemsSource="{Binding Tracks}">
+                            <ItemsControl.ItemTemplate>
+                              <DataTemplate>
+                                <Grid ColumnDefinitions="*,24" Background="#191b1e">
+                                  <Grid Grid.Column="0"
+                                        ColumnDefinitions="46,68,2*,1.5*,1.7*,92"
+                                        RowDefinitions="36,Auto">
+                                    <CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding PlaylistPositionDisplay}" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Row="0"
+                                               Grid.Column="2"
+                                               Text="{Binding Title}"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis"
+                                               MaxLines="1" />
+                                    <TextBlock Grid.Row="0"
+                                               Grid.Column="3"
+                                               Text="{Binding Artist}"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis"
+                                               MaxLines="1" />
+                                    <TextBlock Grid.Row="0"
+                                               Grid.Column="4"
+                                               Text="{Binding AlbumTitle}"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis"
+                                               MaxLines="1" />
+                                    <TextBlock Grid.Row="0" Grid.Column="5" Text="{Binding Duration}" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Row="1"
+                                               Grid.Column="2"
+                                               Grid.ColumnSpan="4"
+                                               Text="{Binding Version}"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                               TextTrimming="CharacterEllipsis"
+                                               MaxLines="1"
+                                               Margin="0,0,0,8"
+                                               IsVisible="{Binding HasVersion}" />
+                                  </Grid>
+                                </Grid>
+                              </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                          </ItemsControl>
+                        </Grid>
+                      </ScrollViewer>
+                      <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
+                        <TextBlock Grid.Column="0"
+                                   Text="{Binding TrackRangeText}"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   VerticalAlignment="Center" />
+                        <Button Grid.Column="1"
+                                Classes="secondary"
+                                Command="{Binding PreviousTrackPageCommand}"
+                                IsEnabled="{Binding CanGoPreviousTrackPage}"
+                                Padding="10,5">
+                          <TextBlock Text="Previous" />
+                        </Button>
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding TrackPageText}"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   VerticalAlignment="Center" />
+                        <Button Grid.Column="3"
+                                Classes="secondary"
+                                Command="{Binding NextTrackPageCommand}"
+                                IsEnabled="{Binding CanGoNextTrackPage}"
+                                Padding="10,5">
+                          <TextBlock Text="Next" />
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  </Grid>
+                </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsRepeater.ItemTemplate>
+          </ItemsRepeater>
+        </ScrollViewer>
+        <Border Classes="panel"
+                Padding="24"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Top"
+                IsVisible="{Binding ShowNoResults}">
+          <TextBlock Text="No Results"
+                     HorizontalAlignment="Center"
+                     Foreground="{DynamicResource TextSecondaryBrush}"
+                     FontSize="18"
+                     FontWeight="SemiBold" />
+        </Border>
+      </Grid>
+      <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto">
+        <TextBlock Grid.Column="0" Text="{Binding ResultCountText}" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
+        <Button Grid.Column="2"
+                Classes="secondary"
+                Command="{Binding LoadMoreCommand}"
+                IsVisible="{Binding HasResults}">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <ic:FluentIcon Icon="ArrowDownload"
+                           IconVariant="Regular"
+                           IconSize="Size24"
+                           FontSize="20"
+                           Foreground="{DynamicResource TextPrimaryBrush}" />
+            <TextBlock Text="Load More" />
+          </StackPanel>
+        </Button>
+      </Grid>
+    </Grid>
+
+    <Border Grid.Column="1" Grid.RowSpan="2" Classes="panel" Padding="18" IsVisible="{Binding HasSelectedResult}">
+      <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*" RowSpacing="16">
+        <Border Background="#050607" Height="228" CornerRadius="4">
+          <Image Source="{Binding SelectedResult.ThumbnailImage}" Stretch="UniformToFill" />
+        </Border>
+        <Button Grid.Row="1"
+                Classes="link"
+                HorizontalAlignment="Left"
+                Command="{Binding SelectedResult.OpenQobuzCommand}">
+          <TextBlock Text="{Binding SelectedResult.DisplayTitle}"
+                     FontSize="20"
+                     FontWeight="SemiBold"
+                     TextWrapping="Wrap"
+                     MaxLines="3"
+                     TextTrimming="CharacterEllipsis" />
+        </Button>
+        <TextBlock Grid.Row="2" Text="{Binding SelectedResult.Artist}" Foreground="{DynamicResource AccentBlueBrush}" />
+        <Grid Grid.Row="3" RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="128,*" RowSpacing="14">
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="Quality" Foreground="{DynamicResource TextSecondaryBrush}" />
+          <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedResult.Quality}" />
+          <TextBlock Grid.Row="1" Grid.Column="0" Text="Release Date" Foreground="{DynamicResource TextSecondaryBrush}" />
+          <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedResult.ReleaseDate}" />
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="Total Tracks" Foreground="{DynamicResource TextSecondaryBrush}" />
+          <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedResult.TracksDisplay}" />
+          <TextBlock Grid.Row="3"
+                     Grid.Column="0"
+                     Text="Selected Tracks"
+                     Foreground="{DynamicResource TextSecondaryBrush}"
+                     IsVisible="{Binding SelectedResult.CanExpand}" />
+          <TextBlock Grid.Row="3"
+                     Grid.Column="1"
+                     Text="{Binding SelectedResult.SelectedTrackCount}"
+                     IsVisible="{Binding SelectedResult.CanExpand}" />
+        </Grid>
+        <Border Grid.Row="4" Height="1" Background="{DynamicResource BorderSubtleBrush}" />
+        <TextBlock Grid.Row="5" Text="Destination preview" Foreground="{DynamicResource TextSecondaryBrush}" />
+        <Border Grid.Row="6" Classes="panel" Padding="10">
+          <controls:DestinationPreviewBox Text="{Binding DestinationPreview}" />
+        </Border>
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>
