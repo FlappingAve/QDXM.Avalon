@@ -27,7 +27,8 @@ QobuzApiSharp/          Forked Qobuz API wrapper submodule
 ## Requirements
 
 - Windows.
-- .NET SDK 8 or newer.
+- .NET SDK 8 or newer for building.
+- .NET 8 Runtime / Desktop Runtime for running the app.
 - The `QobuzApiSharp` submodule.
 
 Clone with submodules:
