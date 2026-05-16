@@ -26,6 +26,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\README.md"
+          Link="README.md"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest" />
     <None Include="..\LICENSE"
           Link="LICENSE"
           CopyToOutputDirectory="PreserveNewest"
