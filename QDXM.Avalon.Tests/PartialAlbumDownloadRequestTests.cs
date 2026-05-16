@@ -28,7 +28,7 @@ public sealed class PartialAlbumDownloadRequestTests
     {
         var settings = new AppSettings
         {
-            DownloadFolder = @"D:\Sort",
+            DownloadFolder = TestPaths.DownloadRoot,
             FolderTemplate = @"{AlbumArtist}\({ReleaseYear}) {AlbumTitle} {Version} [{Quality}]",
             FilenameTemplate = "{TrackNumberPadded} - {TrackTitle} ({Version})"
         };
@@ -63,34 +63,34 @@ public sealed class PartialAlbumDownloadRequestTests
     [Fact]
     public void DestinationPreviewRenderer_UsesConnectedTreePrefixesForDownloadPreview()
     {
-        var settings = new AppSettings { DownloadFolder = @"D:\Sort" };
+        var settings = new AppSettings { DownloadFolder = TestPaths.DownloadRoot };
         var item = new DownloadQueueItemViewModel
         {
             Type = DownloadContentType.Playlist,
             DestinationFilePaths =
             [
-                Path.Combine(@"D:\Sort", "Playlists", "Road Trip", "0001 - First.flac")
+                Path.Combine(TestPaths.DownloadRoot, "Playlists", "Road Trip", "0001 - First.flac")
             ],
             DestinationPreviewRemainingCount = 1899
         };
 
         var preview = DestinationPreviewRenderer.ForDownloadItem(item, settings);
 
-        Assert.Equal(
-            """
-            D:\Sort
-            └─ Playlists
-               └─ Road Trip
-                  ├─ 0001 - First.flac
-                  └─ 1899 more
-            """.ReplaceLineEndings("\n"),
-            preview.ReplaceLineEndings("\n"));
+        var expected = string.Join(
+            '\n',
+            TestPaths.DownloadRoot,
+            "\u2514\u2500 Playlists",
+            "   \u2514\u2500 Road Trip",
+            "      \u251c\u2500 0001 - First.flac",
+            "      \u2514\u2500 1899 more");
+
+        Assert.Equal(expected, preview.ReplaceLineEndings("\n"));
     }
 
     [Fact]
     public void DestinationPreviewRenderer_PlaylistSearchPreviewEndsSingleSelectedTrackAsLastLeaf()
     {
-        var settings = new AppSettings { DownloadFolder = @"D:\Sort" };
+        var settings = new AppSettings { DownloadFolder = TestPaths.DownloadRoot };
         var result = new SearchResultViewModel((_, _) => { })
         {
             Id = "playlist-1",
@@ -122,7 +122,7 @@ public sealed class PartialAlbumDownloadRequestTests
 
         var expected = string.Join(
             '\n',
-            @"D:\Sort",
+            TestPaths.DownloadRoot,
             "\u2514\u2500 Playlists",
             "   \u2514\u2500 Road Trip",
             "      \u2514\u2500 01 - Example Artist - First.flac");

@@ -1,4 +1,4 @@
-﻿using QobuzApiSharp.Models.Content;
+using QobuzApiSharp.Models.Content;
 using QDXM.Avalon.Core.Api;
 using QDXM.Avalon.Core.Protocol;
 using QDXM.Avalon.Core.Settings;
@@ -259,7 +259,7 @@ public sealed class ProtocolAndToolsTests
     [Fact]
     public void StringTools_ReturnsNoRelativeSegmentsWhenDestinationIsBaseFolder()
     {
-        Assert.Empty(StringTools.GetRelativeSegments(@"D:\Sort", @"D:\Sort"));
+        Assert.Empty(StringTools.GetRelativeSegments(TestPaths.DownloadRoot, TestPaths.DownloadRoot));
     }
 
     [Fact]
@@ -344,7 +344,7 @@ public sealed class ProtocolAndToolsTests
         };
 
         var destination = PathTemplateRenderer.RenderAlbumDestination(
-            @"D:\Sort",
+            TestPaths.DownloadRoot,
             "{AlbumArtist}-{AlbumTitle}-{Quality}",
             album,
             "MusicalBasics",
@@ -352,7 +352,7 @@ public sealed class ProtocolAndToolsTests
             "FLAC 16/44.1");
 
         Assert.Equal(
-            Path.Combine(@"D:\Sort", "MusicalBasics-Fur Elise Nightmare-FLAC (16bit-44.1kHz)"),
+            Path.Combine(TestPaths.DownloadRoot, "MusicalBasics-Fur Elise Nightmare-FLAC (16bit-44.1kHz)"),
             destination);
     }
 
@@ -368,7 +368,7 @@ public sealed class ProtocolAndToolsTests
         };
 
         var destination = PathTemplateRenderer.RenderAlbumDestination(
-            @"D:\Sort",
+            TestPaths.DownloadRoot,
             @"{AlbumArtist}\[{ReleaseYear}] {AlbumTitle} [{Version}] [{Quality}]",
             album,
             "Example Artist",
@@ -376,7 +376,7 @@ public sealed class ProtocolAndToolsTests
             "FLAC 24/192");
 
         Assert.Equal(
-            Path.Combine(@"D:\Sort", "Example Artist", "[2024] Example Album [Deluxe Edition] [FLAC (24bit-192kHz)]"),
+            Path.Combine(TestPaths.DownloadRoot, "Example Artist", "[2024] Example Album [Deluxe Edition] [FLAC (24bit-192kHz)]"),
             destination);
     }
 
@@ -391,7 +391,7 @@ public sealed class ProtocolAndToolsTests
         };
 
         var destination = PathTemplateRenderer.RenderAlbumDestination(
-            @"D:\Sort",
+            TestPaths.DownloadRoot,
             @"{AlbumArtist}\{AlbumTitle}\{Version}",
             album,
             "Example Artist",
@@ -399,7 +399,7 @@ public sealed class ProtocolAndToolsTests
             "FLAC 16/44.1");
 
         Assert.Equal(
-            Path.Combine(@"D:\Sort", "Example Artist", "Folklore (deluxe version - explicit)", "deluxe version"),
+            Path.Combine(TestPaths.DownloadRoot, "Example Artist", "Folklore (deluxe version - explicit)", "deluxe version"),
             destination);
     }
 
@@ -414,7 +414,7 @@ public sealed class ProtocolAndToolsTests
         };
 
         var destination = PathTemplateRenderer.RenderAlbumDestination(
-            @"D:\Sort",
+            TestPaths.DownloadRoot,
             @"{AlbumArtist}\{AlbumTitle} [{Version}]",
             album,
             "Example Artist",
@@ -422,7 +422,7 @@ public sealed class ProtocolAndToolsTests
             "FLAC 16/44.1");
 
         Assert.Equal(
-            Path.Combine(@"D:\Sort", "Example Artist", "Folklore (deluxe version - explicit)"),
+            Path.Combine(TestPaths.DownloadRoot, "Example Artist", "Folklore (deluxe version - explicit)"),
             destination);
     }
 
@@ -437,7 +437,7 @@ public sealed class ProtocolAndToolsTests
         };
 
         var destination = PathTemplateRenderer.RenderAlbumDestination(
-            @"D:\Sort",
+            TestPaths.DownloadRoot,
             @"{AlbumArtist}\{AlbumTitle} [{Version}]",
             album,
             "Vince Guaraldi Trio",
@@ -446,7 +446,7 @@ public sealed class ProtocolAndToolsTests
 
         Assert.Equal(
             Path.Combine(
-                @"D:\Sort",
+                TestPaths.DownloadRoot,
                 "Vince Guaraldi Trio",
                 "A Charlie Brown Christmas (Remastered & Expanded Edition) [2012 Remastered & Expanded Edition]"),
             destination);
@@ -560,14 +560,14 @@ public sealed class ProtocolAndToolsTests
         var album = CreateFieldMatrixAlbum();
 
         var destination = PathTemplateRenderer.RenderAlbumDestination(
-            @"D:\Sort",
+            TestPaths.DownloadRoot,
             template,
             album,
             "Example Album Artist",
             "Example Album",
             "FLAC 24/96");
 
-        Assert.Equal(Path.Combine(@"D:\Sort", expectedFolderName), destination);
+        Assert.Equal(Path.Combine(TestPaths.DownloadRoot, expectedFolderName), destination);
     }
 
     [Fact]
@@ -576,14 +576,14 @@ public sealed class ProtocolAndToolsTests
         var album = CreateFieldMatrixAlbum();
 
         var destination = PathTemplateRenderer.RenderAlbumDestination(
-            @"D:\Sort",
+            TestPaths.DownloadRoot,
             string.Empty,
             album,
             "Example Album Artist",
             "Example Album",
             "FLAC 24/96");
 
-        Assert.Equal(@"D:\Sort", destination);
+        Assert.Equal(TestPaths.DownloadRoot, destination);
     }
 
     [Fact]
@@ -592,7 +592,7 @@ public sealed class ProtocolAndToolsTests
         var album = CreateFieldMatrixAlbum();
 
         var destination = PathTemplateRenderer.RenderAlbumDestination(
-            @"D:\Sort",
+            TestPaths.DownloadRoot,
             null,
             album,
             "Example Album Artist",
@@ -600,7 +600,7 @@ public sealed class ProtocolAndToolsTests
             "FLAC 24/96");
 
         Assert.Equal(
-            Path.Combine(@"D:\Sort", "Example Album Artist", "(2026) Example Album (Deluxe Edition) [FLAC (24bit-96kHz)]"),
+            Path.Combine(TestPaths.DownloadRoot, "Example Album Artist", "(2026) Example Album (Deluxe Edition) [FLAC (24bit-96kHz)]"),
             destination);
     }
 
@@ -608,7 +608,7 @@ public sealed class ProtocolAndToolsTests
     public void PathTemplateRenderer_RendersPreviewFolderFields()
     {
         var destination = PathTemplateRenderer.RenderAlbumDestinationPreview(
-            @"D:\Sort",
+            TestPaths.DownloadRoot,
             @"{AlbumTitle} [{Version}] [{ReleaseType}] [{Label}] [{UPC}] [{TotalDiscsPadded}] [{ExplicitAdvisory}]",
             "Example Artist",
             "Example Album",
@@ -623,7 +623,7 @@ public sealed class ProtocolAndToolsTests
             explicitAdvisory: true);
 
         Assert.Equal(
-            Path.Combine(@"D:\Sort", "Example Album [Remastered Edition] [Album] [Example Records] [0000000000000] [02] [Explicit]"),
+            Path.Combine(TestPaths.DownloadRoot, "Example Album [Remastered Edition] [Album] [Example Records] [0000000000000] [02] [Explicit]"),
             destination);
     }
 
@@ -984,14 +984,14 @@ public sealed class ProtocolAndToolsTests
         };
 
         var destination = PathTemplateRenderer.RenderAlbumDestination(
-            @"D:\Sort",
+            TestPaths.DownloadRoot,
             @"Artist\Album",
             album,
             "Example Artist",
             "Example Album",
             "FLAC 16/44.1");
 
-        Assert.Equal(Path.Combine(@"D:\Sort", "Artist", "Album"), destination);
+        Assert.Equal(Path.Combine(TestPaths.DownloadRoot, "Artist", "Album"), destination);
     }
 
     private static Album CreateFieldMatrixAlbum()

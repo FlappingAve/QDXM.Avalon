@@ -26,18 +26,18 @@ public sealed class SettingsViewModelTests
     {
         var store = new MemorySettingsStore(new AppSettings
         {
-            DownloadFolder = @"D:\Before",
+            DownloadFolder = Path.Combine(TestPaths.TestingRoot, "Before"),
             MaxFileNameLength = 80
         });
         var viewModel = new SettingsViewModel(store)
         {
-            DownloadFolder = @"D:\After",
+            DownloadFolder = Path.Combine(TestPaths.TestingRoot, "After"),
             MaxFileNameLengthValue = 90
         };
 
         await viewModel.SaveCommand.ExecuteAsync(null);
 
-        Assert.Equal(@"D:\After", store.Current.DownloadFolder);
+        Assert.Equal(Path.Combine(TestPaths.TestingRoot, "After"), store.Current.DownloadFolder);
         Assert.Equal(90, store.Current.MaxFileNameLength);
         Assert.Equal(1, store.SaveCount);
         Assert.False(viewModel.HasMaxFileNameLengthError);

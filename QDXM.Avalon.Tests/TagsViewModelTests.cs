@@ -46,26 +46,26 @@ public sealed class TagsViewModelTests
     {
         var viewModel = CreateViewModel();
 
-        Assert.Equal(
-            """
-            D:\Sort
-            └─ Example Artist
-               └─ (2026) Example Album (Remastered Edition) [FLAC (24bit-96kHz)]
-                  └─ Disc 01 - Example Work No. 1 & Example Work No. 2
-                     ├─ 01 - Example Track (Remastered Edition).flac
-                     └─ 9 more
-            """.ReplaceLineEndings("\n"),
-            viewModel.CombinedTemplatePreview.ReplaceLineEndings("\n"));
+        var expectedStandardPreview = string.Join(
+            '\n',
+            TestPaths.DownloadRoot,
+            "\u2514\u2500 Example Artist",
+            "   \u2514\u2500 (2026) Example Album (Remastered Edition) [FLAC (24bit-96kHz)]",
+            "      \u2514\u2500 Disc 01 - Example Work No. 1 & Example Work No. 2",
+            "         \u251c\u2500 01 - Example Track (Remastered Edition).flac",
+            "         \u2514\u2500 9 more");
 
-        Assert.Equal(
-            """
-            D:\Sort
-            └─ Playlists
-               └─ Road Trip
-                  ├─ 0001 - Example Artist - Example Track (Remastered Edition).flac
-                  └─ 1899 more
-            """.ReplaceLineEndings("\n"),
-            viewModel.PlaylistTemplatePreview.ReplaceLineEndings("\n"));
+        Assert.Equal(expectedStandardPreview, viewModel.CombinedTemplatePreview.ReplaceLineEndings("\n"));
+
+        var expectedPlaylistPreview = string.Join(
+            '\n',
+            TestPaths.DownloadRoot,
+            "\u2514\u2500 Playlists",
+            "   \u2514\u2500 Road Trip",
+            "      \u251c\u2500 0001 - Example Artist - Example Track (Remastered Edition).flac",
+            "      \u2514\u2500 1899 more");
+
+        Assert.Equal(expectedPlaylistPreview, viewModel.PlaylistTemplatePreview.ReplaceLineEndings("\n"));
     }
 
     [Fact]
@@ -75,20 +75,20 @@ public sealed class TagsViewModelTests
 
         viewModel.DiscWorkHandling = "Folders";
 
-        Assert.Equal(
-            """
-            D:\Sort
-            └─ Example Artist
-               └─ (2026) Example Album (Remastered Edition) [FLAC (24bit-96kHz)]
-                  ├─ Disc 01
-                  │  └─ Example Work No. 1
-                  │     ├─ 01 - Example Track (Remastered Edition).flac
-                  │     └─ 4 more
-                  └─ Disc 02
-                     └─ Example Work No. 2
-                        └─ 5 tracks
-            """.ReplaceLineEndings("\n"),
-            viewModel.CombinedTemplatePreview.ReplaceLineEndings("\n"));
+        var expected = string.Join(
+            '\n',
+            TestPaths.DownloadRoot,
+            "\u2514\u2500 Example Artist",
+            "   \u2514\u2500 (2026) Example Album (Remastered Edition) [FLAC (24bit-96kHz)]",
+            "      \u251c\u2500 Disc 01",
+            "      \u2502  \u2514\u2500 Example Work No. 1",
+            "      \u2502     \u251c\u2500 01 - Example Track (Remastered Edition).flac",
+            "      \u2502     \u2514\u2500 4 more",
+            "      \u2514\u2500 Disc 02",
+            "         \u2514\u2500 Example Work No. 2",
+            "            \u2514\u2500 5 tracks");
+
+        Assert.Equal(expected, viewModel.CombinedTemplatePreview.ReplaceLineEndings("\n"));
     }
 
     [Fact]
@@ -149,7 +149,7 @@ public sealed class TagsViewModelTests
 
     private sealed class MemorySettingsStore : ISettingsStore
     {
-        public AppSettings Current { get; } = new() { DownloadFolder = @"D:\Sort" };
+        public AppSettings Current { get; } = new() { DownloadFolder = TestPaths.DownloadRoot };
 
         public Task<AppSettings> LoadAsync(CancellationToken cancellationToken = default)
         {

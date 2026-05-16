@@ -5,10 +5,12 @@ namespace QDXM.Avalon.Tests;
 public sealed class DownloadLinkImportFileTests
 {
     [Theory]
-    [InlineData("--import", @"C:\Links\qobuz.txt")]
-    [InlineData("/import", @"C:\Links\qobuz.txt")]
-    public void TryGetImportFilePath_ReadsFollowingArgument(string flag, string path)
+    [InlineData("--import")]
+    [InlineData("/import")]
+    public void TryGetImportFilePath_ReadsFollowingArgument(string flag)
     {
+        var path = Path.Combine(TestPaths.TestingRoot, "Links", "qobuz.txt");
+
         var parsed = DownloadLinkImportFile.TryGetImportFilePath([flag, path], out var filePath, out var errorMessage);
 
         Assert.True(parsed);
@@ -19,13 +21,15 @@ public sealed class DownloadLinkImportFileTests
     [Fact]
     public void TryGetImportFilePath_ReadsEqualsArgument()
     {
+        var path = Path.Combine(TestPaths.TestingRoot, "Links", "qobuz.txt");
+
         var parsed = DownloadLinkImportFile.TryGetImportFilePath(
-            [@"--import=C:\Links\qobuz.txt"],
+            [$"--import={path}"],
             out var filePath,
             out var errorMessage);
 
         Assert.True(parsed);
-        Assert.Equal(@"C:\Links\qobuz.txt", filePath);
+        Assert.Equal(path, filePath);
         Assert.Null(errorMessage);
     }
 

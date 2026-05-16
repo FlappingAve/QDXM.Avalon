@@ -77,9 +77,9 @@ public sealed class SettingsStoreTests
     [Fact]
     public void AppSettings_EffectiveDownloadFolderTrimsConfiguredFolder()
     {
-        var settings = new AppSettings { DownloadFolder = @"  D:\Sort  " };
+        var settings = new AppSettings { DownloadFolder = $"  {TestPaths.DownloadRoot}  " };
 
-        Assert.Equal(@"D:\Sort", settings.EffectiveDownloadFolder);
+        Assert.Equal(TestPaths.DownloadRoot, settings.EffectiveDownloadFolder);
     }
 
     [Fact]
@@ -87,7 +87,7 @@ public sealed class SettingsStoreTests
     {
         var settings = new AppSettings
         {
-            DownloadFolder = @"D:\Before",
+            DownloadFolder = Path.Combine(TestPaths.TestingRoot, "Before"),
             FormatId = "27",
             FallbackToMp3IfFlacUnavailable = true,
             DuplicateFileBehavior = AppSettings.DuplicateFileKeepBoth,
@@ -126,7 +126,7 @@ public sealed class SettingsStoreTests
 
         var snapshot = settings.CreateSnapshot();
 
-        settings.DownloadFolder = @"D:\After";
+        settings.DownloadFolder = Path.Combine(TestPaths.TestingRoot, "After");
         settings.FormatId = "6";
         settings.FallbackToMp3IfFlacUnavailable = false;
         settings.DuplicateFileBehavior = AppSettings.DuplicateFileSkip;
@@ -155,7 +155,7 @@ public sealed class SettingsStoreTests
         settings.Tagging.CommentTag = "After comment";
         settings.Tagging.ArtSize = "Original (Big Size!)";
 
-        Assert.Equal(@"D:\Before", snapshot.DownloadFolder);
+        Assert.Equal(Path.Combine(TestPaths.TestingRoot, "Before"), snapshot.DownloadFolder);
         Assert.Equal("27", snapshot.FormatId);
         Assert.True(snapshot.FallbackToMp3IfFlacUnavailable);
         Assert.Equal(AppSettings.DuplicateFileKeepBoth, snapshot.DuplicateFileBehavior);
@@ -292,7 +292,7 @@ public sealed class SettingsStoreTests
         var store = new JsonSettingsStore(settingsPath, new InMemoryCredentialStore());
         var settings = new AppSettings
         {
-            DownloadFolder = @"D:\Sort",
+            DownloadFolder = TestPaths.DownloadRoot,
             SelectedQuality = QualityStringMappings.FlacHighestLabel,
             FallbackToMp3IfFlacUnavailable = true,
             DuplicateFileBehavior = AppSettings.DuplicateFileKeepBoth,
@@ -307,7 +307,7 @@ public sealed class SettingsStoreTests
         await store.SaveAsync(settings);
         var loaded = await store.LoadAsync();
 
-        Assert.Equal(@"D:\Sort", loaded.DownloadFolder);
+        Assert.Equal(TestPaths.DownloadRoot, loaded.DownloadFolder);
         Assert.Equal(QualityStringMappings.FlacHighestLabel, loaded.SelectedQuality);
         Assert.Equal(QualityStringMappings.FlacHighestFormatId, loaded.FormatId);
         Assert.True(loaded.FallbackToMp3IfFlacUnavailable);
@@ -370,12 +370,12 @@ public sealed class SettingsStoreTests
         var store = new JsonSettingsStore(settingsPath, new InMemoryCredentialStore());
         await store.SaveAsync(new AppSettings
         {
-            DownloadFolder = @"D:\Stored",
+            DownloadFolder = Path.Combine(TestPaths.TestingRoot, "Stored"),
             DiscWorkSeparator = "&"
         });
         await store.LoadAsync();
 
-        store.Current.DownloadFolder = @"D:\Unsaved";
+        store.Current.DownloadFolder = Path.Combine(TestPaths.TestingRoot, "Unsaved");
         store.Current.DiscWorkSeparator = "+";
         await store.SaveTemplatePresetSlotAsync(
             TemplatePresetSlots.Folder,
@@ -391,11 +391,11 @@ public sealed class SettingsStoreTests
 
         var reloaded = await new JsonSettingsStore(settingsPath, new InMemoryCredentialStore()).LoadAsync();
 
-        Assert.Equal(@"D:\Stored", reloaded.DownloadFolder);
+        Assert.Equal(Path.Combine(TestPaths.TestingRoot, "Stored"), reloaded.DownloadFolder);
         Assert.Equal("&", reloaded.DiscWorkSeparator);
         Assert.Equal("user.folder", reloaded.FolderTemplatePresetId);
         Assert.Equal("Folder Test", reloaded.TemplatePresets.Folder.Single().Name);
-        Assert.Equal(@"D:\Unsaved", store.Current.DownloadFolder);
+        Assert.Equal(Path.Combine(TestPaths.TestingRoot, "Unsaved"), store.Current.DownloadFolder);
         Assert.Equal("+", store.Current.DiscWorkSeparator);
         Assert.Equal("user.folder", store.Current.FolderTemplatePresetId);
     }

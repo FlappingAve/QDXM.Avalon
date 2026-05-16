@@ -12,7 +12,8 @@ public sealed class PlaylistDownloadRunnerTests
     [Fact]
     public async Task RunPlaylistAsync_ContinuesAfterTrackFailureAndCompletesWithWarnings()
     {
-        var settings = CreateSettings();
+        using var workspace = TestPaths.CreateWorkspace();
+        var settings = CreateSettings(workspace.CreateDirectory("Sort"));
         var tracks = new[]
         {
             CreateTrack(id: 1, title: "First", playlistPosition: 1),
@@ -65,7 +66,8 @@ public sealed class PlaylistDownloadRunnerTests
     [Fact]
     public async Task RunPlaylistAsync_ContinuesAfterTrackDownloadThrows()
     {
-        var settings = CreateSettings();
+        using var workspace = TestPaths.CreateWorkspace();
+        var settings = CreateSettings(workspace.CreateDirectory("Sort"));
         var tracks = new[]
         {
             CreateTrack(id: 1, title: "First", playlistPosition: 1),
@@ -108,7 +110,8 @@ public sealed class PlaylistDownloadRunnerTests
     [Fact]
     public async Task RunPlaylistAsync_RetryUsesOnlyStoredFailedPlaylistPositions()
     {
-        var settings = CreateSettings();
+        using var workspace = TestPaths.CreateWorkspace();
+        var settings = CreateSettings(workspace.CreateDirectory("Sort"));
         var tracks = new[]
         {
             CreateTrack(id: 1, title: "First", playlistPosition: 1),
@@ -150,7 +153,8 @@ public sealed class PlaylistDownloadRunnerTests
     [Fact]
     public async Task RunPlaylistAsync_SelectedPlaylistTracksPreserveSelectedOrderAndRenumberScope()
     {
-        var settings = CreateSettings();
+        using var workspace = TestPaths.CreateWorkspace();
+        var settings = CreateSettings(workspace.CreateDirectory("Sort"));
         var tracks = new[]
         {
             CreateTrack(id: 1, title: "First", playlistPosition: 1),
@@ -203,7 +207,8 @@ public sealed class PlaylistDownloadRunnerTests
     [Fact]
     public async Task RunPlaylistAsync_PassesAlbumTotalForTrackContextAndPlaylistTotalForDisplay()
     {
-        var settings = CreateSettings();
+        using var workspace = TestPaths.CreateWorkspace();
+        var settings = CreateSettings(workspace.CreateDirectory("Sort"));
         var album = CreateAlbum("Nine Track Album", "Example Artist", tracksCount: 9);
         var tracks = new[]
         {
@@ -245,7 +250,8 @@ public sealed class PlaylistDownloadRunnerTests
     [Fact]
     public async Task RunPlaylistAsync_FallsBackToFirstTrackCoverAndUsesTrackCoversForEmbeddedArt()
     {
-        var settings = CreateSettings();
+        using var workspace = TestPaths.CreateWorkspace();
+        var settings = CreateSettings(workspace.CreateDirectory("Sort"));
         var firstAlbum = CreateAlbum("First Album", "Example Artist", tracksCount: 1);
         firstAlbum.Image = new Image { Large = "https://img.example/first-album.jpg" };
         var secondAlbum = CreateAlbum("Second Album", "Example Artist", tracksCount: 1);
@@ -339,7 +345,7 @@ public sealed class PlaylistDownloadRunnerTests
             settings);
 
         Assert.Equal(
-            Path.Combine(@"D:\Sort", "Playlists", "Road Trip", "0001-1900 - 01-09 - First Track.flac"),
+            Path.Combine(TestPaths.DownloadRoot, "Playlists", "Road Trip", "0001-1900 - 01-09 - First Track.flac"),
             path);
     }
 
@@ -364,7 +370,7 @@ public sealed class PlaylistDownloadRunnerTests
             extensionOverride: ".mp3");
 
         Assert.Equal(
-            Path.Combine(@"D:\Sort", "Playlists", "Road Trip", "0001 - First Track [MP3 (320kbps)].mp3"),
+            Path.Combine(TestPaths.DownloadRoot, "Playlists", "Road Trip", "0001 - First Track [MP3 (320kbps)].mp3"),
             path);
     }
 
@@ -382,7 +388,7 @@ public sealed class PlaylistDownloadRunnerTests
         var path = QobuzDownloadJobRunner.GetStandardPlaylistTrackFilePath(track, settings);
 
         Assert.Equal(
-            Path.Combine(@"D:\Sort", "Example Artist", "Nine Track Album", "01-09 - First Track.flac"),
+            Path.Combine(TestPaths.DownloadRoot, "Example Artist", "Nine Track Album", "01-09 - First Track.flac"),
             path);
     }
 
@@ -400,7 +406,7 @@ public sealed class PlaylistDownloadRunnerTests
         var path = QobuzDownloadJobRunner.GetStandardPlaylistTrackFilePath(track, settings);
 
         Assert.Equal(
-            Path.Combine(@"D:\Sort", "Example Artist", "Double Album", "Disc 02", "03 - Disc Two Track.flac"),
+            Path.Combine(TestPaths.DownloadRoot, "Example Artist", "Double Album", "Disc 02", "03 - Disc Two Track.flac"),
             path);
     }
 
@@ -420,7 +426,7 @@ public sealed class PlaylistDownloadRunnerTests
         var path = QobuzDownloadJobRunner.GetStandardPlaylistTrackFilePath(track, settings);
 
         Assert.Equal(
-            Path.Combine(@"D:\Sort", "Performer Fallback", "Loose Single", "Performer Fallback - Fallback Artist Track.flac"),
+            Path.Combine(TestPaths.DownloadRoot, "Performer Fallback", "Loose Single", "Performer Fallback - Fallback Artist Track.flac"),
             path);
     }
 
@@ -662,7 +668,8 @@ public sealed class PlaylistDownloadRunnerTests
     [Fact]
     public async Task RunFavoritesAsync_DownloadsFavoriteTracksAsOneQueueItem()
     {
-        var settings = CreateSettings();
+        using var workspace = TestPaths.CreateWorkspace();
+        var settings = CreateSettings(workspace.CreateDirectory("Sort"));
         var album = CreateAlbum("Favorite Track Album", "Example Artist", tracksCount: 9);
         var tracks = new Dictionary<string, Track>
         {
@@ -683,7 +690,7 @@ public sealed class PlaylistDownloadRunnerTests
                     track.Title,
                     completedTrackNumber,
                     totalTracks,
-                    @"D:\Sort\Favorite.flac");
+                    Path.Combine(TestPaths.DownloadRoot, "Favorite.flac"));
             });
 
         var events = await CollectEvents(QobuzDownloadJobRunner.RunFavoritesAsync(
@@ -711,7 +718,8 @@ public sealed class PlaylistDownloadRunnerTests
     [Fact]
     public async Task RunFavoritesAsync_ContinuesAfterFavoriteAlbumTrackFailure()
     {
-        var settings = CreateSettings();
+        using var workspace = TestPaths.CreateWorkspace();
+        var settings = CreateSettings(workspace.CreateDirectory("Sort"));
         var album = CreateAlbum("Favorite Album", "Example Artist", tracksCount: 2);
         album.Tracks = new ItemSearchResult<Track>
         {
@@ -732,7 +740,7 @@ public sealed class PlaylistDownloadRunnerTests
                 attemptedDisplayNumbers.Add(displayTrackNumber);
                 return displayTrackNumber == 1
                     ? FailedTrackEvents("queue-1", displayTrackNumber, displayTotalTracks, track.Title, "simulated failure")
-                    : CompletedTrackEvents("queue-1", displayTrackNumber, displayTotalTracks, track.Title, completedTrackNumber, totalTracks, @"D:\Sort\Second.flac");
+                    : CompletedTrackEvents("queue-1", displayTrackNumber, displayTotalTracks, track.Title, completedTrackNumber, totalTracks, Path.Combine(TestPaths.DownloadRoot, "Second.flac"));
             });
 
         var events = await CollectEvents(QobuzDownloadJobRunner.RunFavoritesAsync(
@@ -756,11 +764,11 @@ public sealed class PlaylistDownloadRunnerTests
         Assert.True(Assert.IsType<DownloadCompletedEvent>(events.Last()).HasWarnings);
     }
 
-    private static AppSettings CreateSettings()
+    private static AppSettings CreateSettings(string? downloadFolder = null)
     {
         return new AppSettings
         {
-            DownloadFolder = @"D:\Sort",
+            DownloadFolder = downloadFolder ?? TestPaths.DownloadRoot,
             FormatId = QualityStringMappings.FlacHighestFormatId,
             SelectedQuality = QualityStringMappings.FlacHighestLabel,
             MaxFileNameLength = 150
@@ -827,12 +835,12 @@ public sealed class PlaylistDownloadRunnerTests
                     track.Title,
                     completedTrackNumber,
                     totalTracks,
-                    @"D:\Sort\Test.flac")));
+                    Path.Combine(TestPaths.DownloadRoot, "Test.flac"))));
     }
 
     private static string ResolveTestFilePath(Func<QobuzDownloadJobRunner.ResolvedDownloadStream, string>? resolvedFilePathFactory)
     {
-        return resolvedFilePathFactory?.Invoke(CreateTestStream()) ?? @"D:\Sort\Test Track.flac";
+        return resolvedFilePathFactory?.Invoke(CreateTestStream()) ?? Path.Combine(TestPaths.DownloadRoot, "Test Track.flac");
     }
 
     private static QobuzDownloadJobRunner.ResolvedDownloadStream CreateTestStream()

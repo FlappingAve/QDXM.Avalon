@@ -12,7 +12,7 @@ public sealed class PathTemplateRendererCharacterizationTests
         var album = CreateAlbum();
 
         var path = PathTemplateRenderer.RenderAlbumDestination(
-            @"D:\Sort",
+            TestPaths.DownloadRoot,
             @"{AlbumArtist}/{AlbumTitle}\{Quality}",
             album,
             "Example Artist",
@@ -20,7 +20,7 @@ public sealed class PathTemplateRendererCharacterizationTests
             "FLAC 24/96");
 
         Assert.Equal(
-            Path.Combine(@"D:\Sort", "Example Artist", "Example Album", "FLAC (24bit-96kHz)"),
+            Path.Combine(TestPaths.DownloadRoot, "Example Artist", "Example Album", "FLAC (24bit-96kHz)"),
             path);
     }
 
@@ -30,14 +30,14 @@ public sealed class PathTemplateRendererCharacterizationTests
         var album = CreateAlbum(title: "Bad:Name / Deluxe?");
 
         var path = PathTemplateRenderer.RenderAlbumDestination(
-            @"D:\Sort",
+            TestPaths.DownloadRoot,
             "{AlbumTitle}",
             album,
             "Example Artist",
             "Bad:Name / Deluxe?",
             "FLAC 24/96");
 
-        Assert.Equal(Path.Combine(@"D:\Sort", "Bad Name Deluxe"), path);
+        Assert.Equal(Path.Combine(TestPaths.DownloadRoot, "Bad Name Deluxe"), path);
     }
 
     [Theory]
@@ -387,14 +387,14 @@ public sealed class PathTemplateRendererCharacterizationTests
         album.Composer = new Artist { Name = "Album Composer" };
 
         var destination = PathTemplateRenderer.RenderAlbumDestination(
-            @"D:\Sort",
+            TestPaths.DownloadRoot,
             @"{AlbumComposer}\{AlbumTitle}",
             album,
             "Example Artist",
             "Example Album",
             "FLAC 24/96");
 
-        Assert.Equal(Path.Combine(@"D:\Sort", "Album Composer", "Example Album"), destination);
+        Assert.Equal(Path.Combine(TestPaths.DownloadRoot, "Album Composer", "Example Album"), destination);
     }
 
     [Fact]
@@ -443,7 +443,7 @@ public sealed class PathTemplateRendererCharacterizationTests
     public void PreviewRenderers_PreserveUiFields()
     {
         var albumPath = PathTemplateRenderer.RenderAlbumDestinationPreview(
-            @"D:\Sort",
+            TestPaths.DownloadRoot,
             @"{AlbumArtist}\{AlbumTitle} [{Quality}]",
             "Preview Artist",
             "Preview Album",
@@ -492,7 +492,7 @@ public sealed class PathTemplateRendererCharacterizationTests
             works: ["Work 1"],
             currentWork: "Work 1");
 
-        Assert.Equal(Path.Combine(@"D:\Sort", "Preview Artist", "Preview Album [FLAC (24bit-96kHz)]"), albumPath);
+        Assert.Equal(Path.Combine(TestPaths.DownloadRoot, "Preview Artist", "Preview Album [FLAC (24bit-96kHz)]"), albumPath);
         Assert.Equal("003 - Preview Track (Preview Version).flac", filename);
         Assert.Equal(["Disc 02 of 10 - Work 1"], discSegments);
     }
@@ -501,7 +501,7 @@ public sealed class PathTemplateRendererCharacterizationTests
     public void RenderPlaylistDestination_UsesDefaultPlaylistFolderTemplate()
     {
         var path = PathTemplateRenderer.RenderPlaylistDestination(
-            @"D:\Sort",
+            TestPaths.DownloadRoot,
             null,
             "11932795",
             "Road: Trip",
@@ -514,14 +514,14 @@ public sealed class PathTemplateRendererCharacterizationTests
             playlistNumber: 0,
             playlistTotalTracks: 25);
 
-        Assert.Equal(Path.Combine(@"D:\Sort", "Playlists", "Road Trip"), path);
+        Assert.Equal(Path.Combine(TestPaths.DownloadRoot, "Playlists", "Road Trip"), path);
     }
 
     [Fact]
     public void RenderPlaylistDestination_FallsBackForBlankPlaylistTitleAndOwner()
     {
         var path = PathTemplateRenderer.RenderPlaylistDestination(
-            @"D:\Sort",
+            TestPaths.DownloadRoot,
             @"{PlaylistOwner}\{PlaylistTitle}",
             "11932795",
             "<iframe src='bad'></iframe>",
@@ -534,7 +534,7 @@ public sealed class PathTemplateRendererCharacterizationTests
             playlistNumber: 0,
             playlistTotalTracks: 25);
 
-        Assert.Equal(Path.Combine(@"D:\Sort", "Unknown Owner", "Playlist 11932795"), path);
+        Assert.Equal(Path.Combine(TestPaths.DownloadRoot, "Unknown Owner", "Playlist 11932795"), path);
     }
 
     [Fact]

@@ -177,14 +177,14 @@ public sealed class PlaylistQueueStateTests
                         CoverArtUrl: string.Empty,
                         ReleaseDate: string.Empty,
                         Upc: string.Empty,
-                        DestinationPath: @"D:\Sort\Playlists\Road Trip",
+                        DestinationPath: Path.Combine(TestPaths.DownloadRoot, "Playlists", "Road Trip"),
                         FilePaths: []),
                     new TrackStartedEvent(itemId, TrackNumber: 1, TotalTracks: 2, TrackTitle: "First"),
                     new FileProgressEvent(itemId, BytesReceived: 5, TotalBytes: 10, MegabytesPerSecond: 1),
-                    new TrackCompletedEvent(itemId, CompletedTracks: 1, TotalTracks: 2, FilePath: @"D:\Sort\first.flac", FileSizeBytes: 10),
+                    new TrackCompletedEvent(itemId, CompletedTracks: 1, TotalTracks: 2, FilePath: Path.Combine(TestPaths.DownloadRoot, "first.flac"), FileSizeBytes: 10),
                     new TrackStartedEvent(itemId, TrackNumber: 2, TotalTracks: 2, TrackTitle: "Second"),
                     new FileProgressEvent(itemId, BytesReceived: 20, TotalBytes: 25, MegabytesPerSecond: 1),
-                    new TrackCompletedEvent(itemId, CompletedTracks: 2, TotalTracks: 2, FilePath: @"D:\Sort\second.flac", FileSizeBytes: 25),
+                    new TrackCompletedEvent(itemId, CompletedTracks: 2, TotalTracks: 2, FilePath: Path.Combine(TestPaths.DownloadRoot, "second.flac"), FileSizeBytes: 25),
                     new DownloadCompletedEvent(itemId, HasWarnings: false)
                 ]);
         var viewModel = new DownloadsViewModel(
@@ -232,13 +232,13 @@ public sealed class PlaylistQueueStateTests
             CoverArtUrl: string.Empty,
             ReleaseDate: string.Empty,
             Upc: string.Empty,
-            DestinationPath: @"D:\Sort\Playlists\Road Trip",
+            DestinationPath: Path.Combine(TestPaths.DownloadRoot, "Playlists", "Road Trip"),
             FilePaths: []));
         ApplyDownloadEvent(viewModel, item, new TrackCompletedEvent(
             item.Id,
             CompletedTracks: 2,
             TotalTracks: 2,
-            FilePath: @"D:\Sort\second.flac",
+            FilePath: Path.Combine(TestPaths.DownloadRoot, "second.flac"),
             FileSizeBytes: 25));
 
         Assert.Null(item.SizeBytes);
@@ -274,13 +274,13 @@ public sealed class PlaylistQueueStateTests
             CoverArtUrl: string.Empty,
             ReleaseDate: string.Empty,
             Upc: string.Empty,
-            DestinationPath: @"D:\Sort\Example Artist\Example Album",
+            DestinationPath: Path.Combine(TestPaths.DownloadRoot, "Example Artist", "Example Album"),
             FilePaths: []));
         ApplyDownloadEvent(viewModel, item, new TrackCompletedEvent(
             item.Id,
             CompletedTracks: 2,
             TotalTracks: 2,
-            FilePath: @"D:\Sort\second.flac",
+            FilePath: Path.Combine(TestPaths.DownloadRoot, "second.flac"),
             FileSizeBytes: 25));
 
         Assert.Null(item.SizeBytes);

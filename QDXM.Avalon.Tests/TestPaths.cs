@@ -57,6 +57,7 @@ internal sealed class TestWorkspace : IDisposable
 internal static class TestPaths
 {
     public static string TestingRoot { get; } = FindTestingRoot();
+    public static string DownloadRoot { get; } = Path.Combine(TestingRoot, "Sort");
 
     public static TestWorkspace CreateWorkspace()
     {
