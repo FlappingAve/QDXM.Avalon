@@ -41,6 +41,7 @@ public sealed class SettingsStoreTests
         Assert.True(settings.Tagging.WriteAlbumNameTag);
         Assert.True(settings.Tagging.WriteTrackArtistTag);
         Assert.True(settings.Tagging.WriteTrackTitleTag);
+        Assert.False(settings.Tagging.IncludeVersionInTrackTitleTag);
         Assert.True(settings.Tagging.WriteReleaseYearTag);
         Assert.True(settings.Tagging.WriteReleaseTypeTag);
         Assert.True(settings.Tagging.WriteReleaseDateTag);

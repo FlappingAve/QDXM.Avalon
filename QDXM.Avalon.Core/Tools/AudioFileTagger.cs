@@ -33,7 +33,7 @@ public static class AudioFileTagger
 
         if (tagging.WriteTrackTitleTag)
         {
-            tagFile.Tag.Title = QobuzTitleFormatter.TrackTitle(track.Title);
+            tagFile.Tag.Title = BuildTrackTitleTag(track, tagging);
         }
 
         if (tagging.WriteAlbumNameTag)
@@ -110,7 +110,7 @@ public static class AudioFileTagger
             tagFile.Tag.ISRC = track.Isrc;
         }
 
-        WriteFormatSpecificTags(tagFile, track, album, tagging, releaseDate, album.Version);
+        WriteFormatSpecificTags(tagFile, track, album, tagging, releaseDate);
         tagFile.Save();
     }
 
@@ -119,8 +119,7 @@ public static class AudioFileTagger
         Track track,
         Album album,
         TaggingOptions tagging,
-        DateTimeOffset? releaseDate,
-        string? version)
+        DateTimeOffset? releaseDate)
     {
         if (tagFile.GetTag(TagTypes.Xiph, create: false) is TagLib.Ogg.XiphComment xiph)
         {
@@ -148,10 +147,7 @@ public static class AudioFileTagger
 
             WriteXiphReleaseTypeTag(xiph, album.ReleaseType, tagging);
 
-            if (tagging.WriteVersionTag && !string.IsNullOrWhiteSpace(version))
-            {
-                xiph.SetField("VERSION", Decode(version));
-            }
+            WriteXiphVersionTag(xiph, track.Version, tagging);
 
             WriteXiphWorkTag(xiph, track.Work, tagging);
 
@@ -176,10 +172,7 @@ public static class AudioFileTagger
 
             WriteId3ReleaseTypeTag(id3, album.ReleaseType, tagging);
 
-            if (tagging.WriteVersionTag && !string.IsNullOrWhiteSpace(version))
-            {
-                SetUserTextFrame(id3, "VERSION", Decode(version));
-            }
+            WriteId3VersionTag(id3, track.Version, tagging);
 
             WriteId3WorkTag(id3, track.Work, tagging);
 
@@ -192,6 +185,30 @@ public static class AudioFileTagger
         if (tagging.WriteWorkTag && !string.IsNullOrWhiteSpace(work))
         {
             xiph.SetField("WORK", Decode(work));
+        }
+    }
+
+    internal static string BuildTrackTitleTag(Track track, TaggingOptions tagging)
+    {
+        var title = QobuzTitleFormatter.TrackTitle(track.Title);
+        var version = track.Version?.Trim() ?? string.Empty;
+        if (!tagging.IncludeVersionInTrackTitleTag ||
+            string.IsNullOrWhiteSpace(version) ||
+            QobuzTitleFormatter.ContainsNormalizedVersion(title, version))
+        {
+            return title;
+        }
+
+        return string.IsNullOrWhiteSpace(title)
+            ? version
+            : $"{title} ({version})";
+    }
+
+    internal static void WriteXiphVersionTag(TagLib.Ogg.XiphComment xiph, string? version, TaggingOptions tagging)
+    {
+        if (tagging.WriteVersionTag && !string.IsNullOrWhiteSpace(version))
+        {
+            xiph.SetField("VERSION", Decode(version));
         }
     }
 
@@ -209,6 +226,14 @@ public static class AudioFileTagger
         if (tagging.WriteWorkTag && !string.IsNullOrWhiteSpace(work))
         {
             SetUserTextFrame(id3, "WORK", Decode(work));
+        }
+    }
+
+    internal static void WriteId3VersionTag(TagLib.Id3v2.Tag id3, string? version, TaggingOptions tagging)
+    {
+        if (tagging.WriteVersionTag && !string.IsNullOrWhiteSpace(version))
+        {
+            SetUserTextFrame(id3, "VERSION", Decode(version));
         }
     }
 

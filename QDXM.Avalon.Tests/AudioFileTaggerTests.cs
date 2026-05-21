@@ -78,6 +78,63 @@ public sealed class AudioFileTaggerTests
     }
 
     [Fact]
+    public void AudioFileTagger_WritesXiphVersionField()
+    {
+        var xiph = new TagLib.Ogg.XiphComment();
+
+        AudioFileTagger.WriteXiphVersionTag(xiph, "Reggaeton Remix", new TaggingOptions());
+
+        Assert.Equal("Reggaeton Remix", xiph.GetFirstField("VERSION"));
+    }
+
+    [Fact]
+    public void AudioFileTagger_WritesId3VersionUserTextFrame()
+    {
+        var id3 = new TagLib.Id3v2.Tag();
+
+        AudioFileTagger.WriteId3VersionTag(id3, "Reggaeton Remix", new TaggingOptions());
+
+        var frame = TagLib.Id3v2.UserTextInformationFrame.Get(id3, "VERSION", create: false);
+        Assert.NotNull(frame);
+        Assert.Equal(["Reggaeton Remix"], frame!.Text);
+    }
+
+    [Fact]
+    public void AudioFileTagger_BuildTrackTitleTag_OnlyIncludesVersionWhenEnabled()
+    {
+        var track = new Track
+        {
+            Title = "Dolly Song Ieva's Polka",
+            Version = "Reggaeton Remix"
+        };
+
+        Assert.Equal(
+            "Dolly Song Ieva's Polka",
+            AudioFileTagger.BuildTrackTitleTag(track, new TaggingOptions()));
+        Assert.Equal(
+            "Dolly Song Ieva's Polka (Reggaeton Remix)",
+            AudioFileTagger.BuildTrackTitleTag(
+                track,
+                new TaggingOptions { IncludeVersionInTrackTitleTag = true }));
+    }
+
+    [Fact]
+    public void AudioFileTagger_BuildTrackTitleTag_DoesNotDuplicateVersionAlreadyInTitle()
+    {
+        var track = new Track
+        {
+            Title = "Dolly Song Ieva's Polka (Reggaeton Remix)",
+            Version = "Reggaeton Remix"
+        };
+
+        var title = AudioFileTagger.BuildTrackTitleTag(
+            track,
+            new TaggingOptions { IncludeVersionInTrackTitleTag = true });
+
+        Assert.Equal("Dolly Song Ieva's Polka (Reggaeton Remix)", title);
+    }
+
+    [Fact]
     public void AudioFileTagger_SkipsWorkWhenDisabled()
     {
         var xiph = new TagLib.Ogg.XiphComment();

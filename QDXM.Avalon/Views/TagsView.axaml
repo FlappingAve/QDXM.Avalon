@@ -903,7 +903,7 @@
               <CheckBox Content="Release Year" IsChecked="{Binding Settings.Tagging.WriteReleaseYearTag}" ToolTip.Tip="Writes the year from the selected release date." />
               <CheckBox Content="Release Type" IsChecked="{Binding Settings.Tagging.WriteReleaseTypeTag}" ToolTip.Tip="Writes the release category, such as album, single, EP, box set, or compilation." />
               <CheckBox Content="Release Date" IsChecked="{Binding Settings.Tagging.WriteReleaseDateTag}" ToolTip.Tip="Writes the selected release date as YYYY-MM-DD." />
-              <CheckBox Content="Version" IsChecked="{Binding Settings.Tagging.WriteVersionTag}" ToolTip.Tip="Writes edition/version text when provided, such as remaster, mix, take, or demo." />
+              <CheckBox Content="URL" IsChecked="{Binding Settings.Tagging.WriteUrlTag}" ToolTip.Tip="Writes the Qobuz album URL." />
               <CheckBox Content="Work" IsChecked="{Binding Settings.Tagging.WriteWorkTag}" ToolTip.Tip="Writes the track's work heading when provided." />
               <CheckBox Content="Genre" IsChecked="{Binding Settings.Tagging.WriteGenreTag}" ToolTip.Tip="Writes Qobuz genre metadata. Values may be hierarchical or localized." />
               <CheckBox Content="Track Number" IsChecked="{Binding Settings.Tagging.WriteTrackNumberTag}" ToolTip.Tip="Writes the track number from Qobuz." />
@@ -919,7 +919,10 @@
               <CheckBox Content="UPC" IsChecked="{Binding Settings.Tagging.WriteUpcTag}" ToolTip.Tip="Writes the album UPC to BARCODE." />
               <CheckBox Content="ISRC" IsChecked="{Binding Settings.Tagging.WriteIsrcTag}" ToolTip.Tip="Writes the track-level recording identifier." />
               <CheckBox Content="Explicit Advisory" IsChecked="{Binding Settings.Tagging.WriteExplicitTag}" ToolTip.Tip="Writes an explicit advisory only when the track is explicit." />
-              <CheckBox Content="URL" IsChecked="{Binding Settings.Tagging.WriteUrlTag}" ToolTip.Tip="Writes the Qobuz album URL." />
+              <CheckBox Content="Version" IsChecked="{Binding Settings.Tagging.WriteVersionTag}" ToolTip.Tip="Writes edition/version text when provided, such as remaster, mix, take, or demo." />
+              <CheckBox Content="Version in Track Title"
+                        IsChecked="{Binding Settings.Tagging.IncludeVersionInTrackTitleTag}"
+                        ToolTip.Tip="Adds track version text to the written title when it is not already present, using the same duplicate-suppression rule as filename previews." />
               <CheckBox Content="Comment" IsChecked="{Binding Settings.Tagging.WriteCommentTag}" ToolTip.Tip="Writes the custom comment text below." />
             </UniformGrid>
             <Grid ColumnDefinitions="190,*" RowDefinitions="Auto" RowSpacing="12">
