@@ -34,6 +34,8 @@ public static class QobuzApiSearchMapper
     {
         return new SearchTrackResult(
             TrackId: track.Id?.ToString() ?? string.Empty,
+            AlbumId: track.Album?.Id ?? string.Empty,
+            ArtistId: GetTrackArtistId(track),
             Title: QobuzTitleFormatter.TrackTitle(track.Title),
             Version: track.Version ?? string.Empty,
             Artist: GetTrackArtist(track),
@@ -187,6 +189,21 @@ public static class QobuzApiSearchMapper
         }
 
         return track.Composer?.Name ?? string.Empty;
+    }
+
+    private static string GetTrackArtistId(Track track)
+    {
+        if (track.Performer?.Id is int performerId)
+        {
+            return performerId.ToString();
+        }
+
+        if (track.Album?.Artist?.Id is int albumArtistId)
+        {
+            return albumArtistId.ToString();
+        }
+
+        return string.Empty;
     }
 
     private static string GetReleaseArtist(Release release)

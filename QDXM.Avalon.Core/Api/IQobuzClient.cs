@@ -46,6 +46,10 @@ public interface IQobuzClient
         SearchQueryOptions options,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<SearchAlbumResult>> SearchGenreAlbumsAsync(
+        SearchQueryOptions options,
+        CancellationToken cancellationToken = default);
+
     Task<SearchAlbumResult> GetAlbumTracksAsync(
         string albumId,
         CancellationToken cancellationToken = default);

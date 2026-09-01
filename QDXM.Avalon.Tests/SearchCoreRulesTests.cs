@@ -96,6 +96,32 @@ public sealed class SearchCoreRulesTests
     }
 
     [Fact]
+    public void QobuzApiSearchMapper_CarriesTrackSourceAlbumId()
+    {
+        var track = new Track
+        {
+            Id = 12345,
+            Title = "Example Track",
+            Performer = new Artist
+            {
+                Id = 6789,
+                Name = "Example Artist"
+            },
+            Album = new Album
+            {
+                Id = "source-album",
+                Title = "Source Album"
+            }
+        };
+
+        var result = QobuzApiSearchMapper.ToTrackResult(track);
+
+        Assert.Equal("12345", result.TrackId);
+        Assert.Equal("source-album", result.AlbumId);
+        Assert.Equal("6789", result.ArtistId);
+    }
+
+    [Fact]
     public void SearchQualityRanker_RanksActualQualityMetadata()
     {
         var qualities = new[]
@@ -124,6 +150,7 @@ public sealed class SearchCoreRulesTests
     [InlineData(SearchResultType.Label, new[] { SearchArrangeOption.Unarranged, SearchArrangeOption.Name, SearchArrangeOption.TotalAlbums })]
     [InlineData(SearchResultType.ArtistAlbums, new[] { SearchArrangeOption.Unarranged, SearchArrangeOption.ReleaseDate, SearchArrangeOption.Quality, SearchArrangeOption.Name, SearchArrangeOption.TotalTracks })]
     [InlineData(SearchResultType.LabelAlbums, new[] { SearchArrangeOption.Unarranged, SearchArrangeOption.ReleaseDate, SearchArrangeOption.Quality, SearchArrangeOption.Name, SearchArrangeOption.TotalTracks })]
+    [InlineData(SearchResultType.Genres, new[] { SearchArrangeOption.Unarranged })]
     public void SearchArrangeOptions_ReturnsCategorySpecificOptions(
         SearchResultType type,
         SearchArrangeOption[] expectedOptions)
@@ -138,6 +165,57 @@ public sealed class SearchCoreRulesTests
         Assert.Equal(QobuzApiLimits.ArtistReleasePageSize, SearchPageSizeOptions.ClampLimit(SearchResultType.ArtistAlbums, 500));
         Assert.DoesNotContain(250, SearchPageSizeOptions.ForType(SearchResultType.ArtistAlbums));
         Assert.DoesNotContain(500, SearchPageSizeOptions.ForType(SearchResultType.ArtistAlbums));
+    }
+
+    [Fact]
+    public void GenreStorefrontUrl_NormalizesPageAndSort()
+    {
+        var matched = QobuzGenreStorefrontUrl.TryParse(
+            "https://www.qobuz.com/ch-fr/genre/k-pop/download-streaming-albums/page/5?ssf%5BsortBy%5D=main_catalog_date_desc",
+            out var url);
+
+        Assert.True(matched);
+        Assert.Equal(SearchGenreSortOption.Newest, url.Sort);
+        Assert.Equal(
+            "https://www.qobuz.com/ch-fr/genre/k-pop/download-streaming-albums/page/2?ssf%5BsortBy%5D=main_catalog_awards",
+            url.CreatePageUrl(2, SearchGenreSortOption.MostAwarded));
+    }
+
+    [Fact]
+    public void GenreStorefrontParser_ExtractsLanguageNeutralAlbumCardFields()
+    {
+        const string Html = """
+            <li>
+              <div class="product__item">
+                <div class="product__cover webp-bg lazy" data-src="https://static.qobuz.com/images/covers/56/wk/albumid_230.jpg">
+                  <a href="/fr-fr/album/example-album/exampleid">
+                    <div class="product__data">
+                      <p class="product__data--genre">K-pop</p>
+                      <p class="product__data--release">16 mai 2026</p>
+                    </div>
+                  </a>
+                  <button data-itemId="exampleid"></button>
+                </div>
+                <div class="product__container">
+                  <h3 class="product__name" data-title="Example &amp; Album">Example &amp; Album</h3>
+                  <p class="product__artist"><a href="/fr-fr/interpreter/example/1">Example Artist</a></p>
+                  <span class="album-quality__info">24-Bit/44.1 kHz</span>
+                  <span class="album-quality__info">Stereo</span>
+                </div>
+              </div>
+            </li>
+            """;
+
+        var albums = new QobuzGenreStorefrontParser()
+            .ParseAlbums(Html, new Uri("https://www.qobuz.com/fr-fr/genre/k-pop/download-streaming-albums"));
+
+        var album = Assert.Single(albums);
+        Assert.Equal("exampleid", album.AlbumId);
+        Assert.Equal("Example & Album", album.Title);
+        Assert.Equal("Example Artist", album.Artist);
+        Assert.Equal("16 mai 2026", album.ReleaseDate);
+        Assert.Equal("FLAC 24/44.1", album.Quality);
+        Assert.Equal("https://open.qobuz.com/album/exampleid", album.WebPlayerUrl);
     }
 
     [Fact]

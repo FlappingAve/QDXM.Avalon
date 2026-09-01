@@ -6,6 +6,7 @@ using QDXM.Avalon.Services;
 using QDXM.Avalon.Core.Api;
 using QDXM.Avalon.Core.Downloads;
 using QDXM.Avalon.Core.Settings;
+using QDXM.Avalon.Core.Tools;
 
 namespace QDXM.Avalon.ViewModels;
 
@@ -29,6 +30,9 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         _ = PrimeStorefrontSearchConfigAsync();
 
+        PreviewPlayer = new PreviewPlayerViewModel(
+            CreatePreviewCredentialStore(),
+            LogService);
         Downloads = new DownloadsViewModel(CreateDownloadJobRunner(settingsStore.Current), LogService, settings: settingsStore.Current);
         Search = new SearchViewModel(
             CreateQobuzClient(settingsStore.Current),
@@ -36,9 +40,22 @@ public partial class MainWindowViewModel : ViewModelBase
             request => Downloads.EnqueuePartialAlbumRequest(request),
             request => Downloads.EnqueuePartialPlaylistRequest(request),
             LogService,
-            settingsStore.Current);
+            settingsStore.Current,
+            PreviewPlayer.PlayTrackAsync,
+            PreviewPlayer.Clear,
+            PreviewPlayer.ClearIfContext);
+        PreviewPlayer.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName is nameof(PreviewPlayerViewModel.ActiveTrackId) or nameof(PreviewPlayerViewModel.IsPlaying))
+            {
+                Search.UpdatePreviewPlaybackState(PreviewPlayer.ActiveTrackId, PreviewPlayer.IsPlaying);
+            }
+        };
         Tags = new TagsViewModel(settingsStore);
-        Settings = new SettingsViewModel(settingsStore);
+        Settings = new SettingsViewModel(
+            settingsStore,
+            CreatePreviewCredentialStore(),
+            LogService);
         Login = new LoginViewModel(settingsStore, LogService);
         Logs = new LogsViewModel(LogService);
         Account = new AccountViewModel(settingsStore.Current);
@@ -132,6 +149,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public LoginViewModel Login { get; }
     public LogsViewModel Logs { get; }
     public AccountViewModel Account { get; }
+    public PreviewPlayerViewModel PreviewPlayer { get; }
     public AppLogService LogService { get; }
 
     public string VersionText { get; } =
@@ -229,6 +247,11 @@ public partial class MainWindowViewModel : ViewModelBase
             settings);
     }
 
+    private static WindowsCredentialStore CreatePreviewCredentialStore()
+    {
+        return new WindowsCredentialStore(AppDataPaths.PreviewCredentialTargetName);
+    }
+
     private static QobuzStorefrontSearchConfigProvider SharedStorefrontSearchConfigProvider { get; } = new();
 
     private async Task PrimeStorefrontSearchConfigAsync()
@@ -284,6 +307,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public Task PrepareForShutdownAsync()
     {
+        PreviewPlayer.Dispose();
         return Downloads.PrepareForShutdownAsync();
     }
 

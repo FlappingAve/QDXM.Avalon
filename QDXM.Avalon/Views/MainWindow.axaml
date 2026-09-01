@@ -229,6 +229,68 @@
                            Text="{Binding Downloads.OverallProgressPercentText}"
                            VerticalAlignment="Center"
                            Foreground="{DynamicResource TextPrimaryBrush}" />
+                <Grid Grid.Column="4"
+                      ColumnDefinitions="Auto,Auto,128,Auto,Auto"
+                      ColumnSpacing="7"
+                      Width="300"
+                      VerticalAlignment="Center">
+                    <Button Grid.Column="0"
+                            Classes="iconOnly"
+                            Command="{Binding PreviewPlayer.TogglePlayPauseCommand}"
+                            ToolTip.Tip="{Binding PreviewPlayer.PlayPauseToolTip}">
+                        <Grid>
+                            <ic:FluentIcon Icon="Play"
+                                           IconVariant="Filled"
+                                           IconSize="Size20"
+                                           FontSize="16"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           IsVisible="{Binding PreviewPlayer.IsNotPlaying}" />
+                            <ic:FluentIcon Icon="Pause"
+                                           IconVariant="Filled"
+                                           IconSize="Size20"
+                                           FontSize="16"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           IsVisible="{Binding PreviewPlayer.IsPlaying}" />
+                        </Grid>
+                    </Button>
+                    <Button Grid.Column="1"
+                            Classes="iconOnly"
+                            Command="{Binding PreviewPlayer.StopCommand}"
+                            ToolTip.Tip="Stop preview">
+                        <ic:FluentIcon Icon="Stop"
+                                       IconVariant="Filled"
+                                       IconSize="Size20"
+                                       FontSize="16"
+                                       Foreground="{DynamicResource TextPrimaryBrush}" />
+                    </Button>
+                    <StackPanel Grid.Column="2"
+                                VerticalAlignment="Center"
+                                Spacing="0">
+                        <TextBlock Text="{Binding PreviewPlayer.TrackName}"
+                                   TextTrimming="CharacterEllipsis"
+                                   MaxLines="1" />
+                        <TextBlock Text="{Binding PreviewPlayer.AlbumName}"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                   TextTrimming="CharacterEllipsis"
+                                   MaxLines="1" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="3"
+                                VerticalAlignment="Center"
+                                Spacing="0">
+                        <TextBlock Text="{Binding PreviewPlayer.CurrentLengthText}"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                        <TextBlock Text="{Binding PreviewPlayer.TrackLengthText}"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" />
+                    </StackPanel>
+                    <Slider Grid.Column="4"
+                            Width="72"
+                            Minimum="0"
+                            Maximum="100"
+                            Value="{Binding PreviewPlayer.Volume}"
+                            VerticalAlignment="Center"
+                            ToolTip.Tip="Preview volume" />
+                </Grid>
                 <TextBlock Grid.Column="5"
                            Text="Speed"
                            VerticalAlignment="Center"

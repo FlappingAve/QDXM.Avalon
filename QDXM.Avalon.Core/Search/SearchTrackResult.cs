@@ -2,6 +2,8 @@
 
 public sealed record SearchTrackResult(
     string TrackId,
+    string AlbumId,
+    string ArtistId,
     string Title,
     string Version,
     string Artist,

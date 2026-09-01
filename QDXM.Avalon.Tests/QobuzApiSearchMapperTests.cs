@@ -69,7 +69,7 @@ public sealed class QobuzApiSearchMapperTests
             Id = 456,
             Title = "Nocturne",
             Version = "Remastered",
-            Performer = new Artist { Name = "Pianist" },
+            Performer = new Artist { Id = 1234, Name = "Pianist" },
             Duration = 121,
             ReleaseDateDownload = new DateTimeOffset(2025, 4, 8, 0, 0, 0, TimeSpan.Zero),
             Album = new Album
@@ -86,6 +86,7 @@ public sealed class QobuzApiSearchMapperTests
         var result = QobuzApiSearchMapper.ToTrackResult(track);
 
         Assert.Equal("456", result.TrackId);
+        Assert.Equal("1234", result.ArtistId);
         Assert.Equal("Nocturne", result.Title);
         Assert.Equal("Remastered", result.Version);
         Assert.Equal("Pianist", result.Artist);

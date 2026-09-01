@@ -5,6 +5,7 @@ public sealed class TaggingOptions
     public bool WriteAlbumNameTag { get; set; } = true;
     public bool WriteAlbumArtistTag { get; set; } = true;
     public bool WriteTrackTitleTag { get; set; } = true;
+    public bool IncludeVersionInTrackTitleTag { get; set; }
     public bool WriteTrackArtistTag { get; set; } = true;
     public bool WriteTrackNumberTag { get; set; } = true;
     public bool WriteTrackTotalTag { get; set; } = true;
@@ -36,6 +37,7 @@ public sealed class TaggingOptions
             WriteAlbumNameTag = WriteAlbumNameTag,
             WriteAlbumArtistTag = WriteAlbumArtistTag,
             WriteTrackTitleTag = WriteTrackTitleTag,
+            IncludeVersionInTrackTitleTag = IncludeVersionInTrackTitleTag,
             WriteTrackArtistTag = WriteTrackArtistTag,
             WriteTrackNumberTag = WriteTrackNumberTag,
             WriteTrackTotalTag = WriteTrackTotalTag,

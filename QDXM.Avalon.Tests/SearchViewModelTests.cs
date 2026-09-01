@@ -1,4 +1,5 @@
 using QDXM.Avalon.Core.Api;
+using QDXM.Avalon.Core.Downloads;
 using QDXM.Avalon.Core.Search;
 using QDXM.Avalon.Services;
 using QDXM.Avalon.ViewModels;
@@ -75,6 +76,104 @@ public sealed class SearchViewModelTests
 
         Assert.Equal("Label Albums", viewModel.SelectedType);
         Assert.Equal("98765", viewModel.Query);
+    }
+
+    [Fact]
+    public async Task TrackContextGoToAlbumSearchesTheSourceAlbum()
+    {
+        var client = new SearchViewModelTestClient
+        {
+            TrackResults = _ => [CreateTrack("track-1", "album-1")],
+            AlbumTrackResult = albumId => CreateAlbum(albumId, "Source Album")
+        };
+        var viewModel = new SearchViewModel(client, null, null)
+        {
+            SelectedType = "Tracks",
+            Query = "jump"
+        };
+
+        await viewModel.SearchCommand.ExecuteAsync(null);
+        var track = Assert.Single(viewModel.Results);
+        await track.GoToSourceAlbumCommand.ExecuteAsync(null);
+
+        Assert.Equal("Albums", viewModel.SelectedType);
+        Assert.Equal("id:album-1", viewModel.Query);
+        Assert.Equal(["album-1"], client.AlbumTrackRequests);
+        Assert.Equal("Source Album", Assert.Single(viewModel.Results).Title);
+    }
+
+    [Fact]
+    public async Task TrackContextDownloadAlbumQueuesTheSourceAlbum()
+    {
+        var queuedRequests = new List<(DownloadRequest Request, SearchResultViewModel Result)>();
+        var client = new SearchViewModelTestClient
+        {
+            TrackResults = _ => [CreateTrack("track-1", "album-1")],
+            AlbumTrackResult = albumId => CreateAlbum(albumId, "Source Album")
+        };
+        var viewModel = new SearchViewModel(
+            client,
+            (request, result) => queuedRequests.Add((request, result)),
+            null)
+        {
+            SelectedType = "Tracks",
+            Query = "jump"
+        };
+
+        await viewModel.SearchCommand.ExecuteAsync(null);
+        var track = Assert.Single(viewModel.Results);
+        await track.DownloadSourceAlbumCommand.ExecuteAsync(null);
+
+        var queued = Assert.Single(queuedRequests);
+        Assert.True(track.CanUseTrackAlbumActions);
+        Assert.Equal(["album-1"], client.AlbumTrackRequests);
+        Assert.Equal(DownloadContentType.Album, queued.Request.ContentType);
+        Assert.Equal("album-1", queued.Request.ContentId);
+        Assert.Equal("Source Album", queued.Result.Title);
+    }
+
+    [Fact]
+    public async Task TrackContextGoToArtistUsesArtistAlbumsWhenArtistIdIsAvailable()
+    {
+        var client = new SearchViewModelTestClient
+        {
+            TrackResults = _ => [CreateTrack("track-1", "album-1", artistId: "12345")]
+        };
+        var viewModel = new SearchViewModel(client, null, null)
+        {
+            SelectedType = "Tracks",
+            Query = "jump"
+        };
+
+        await viewModel.SearchCommand.ExecuteAsync(null);
+        var track = Assert.Single(viewModel.Results);
+        await track.GoToSourceArtistCommand.ExecuteAsync(null);
+
+        Assert.Equal("Artist Albums", viewModel.SelectedType);
+        Assert.Equal("12345", viewModel.Query);
+        Assert.Equal("12345", client.LastArtistAlbumOptions?.Query);
+    }
+
+    [Fact]
+    public async Task TrackContextGoToArtistFallsBackToArtistSearchWhenArtistIdIsMissing()
+    {
+        var client = new SearchViewModelTestClient
+        {
+            TrackResults = _ => [CreateTrack("track-1", "album-1", artistId: string.Empty)]
+        };
+        var viewModel = new SearchViewModel(client, null, null)
+        {
+            SelectedType = "Tracks",
+            Query = "jump"
+        };
+
+        await viewModel.SearchCommand.ExecuteAsync(null);
+        var track = Assert.Single(viewModel.Results);
+        await track.GoToSourceArtistCommand.ExecuteAsync(null);
+
+        Assert.Equal("Artist", viewModel.SelectedType);
+        Assert.Equal("Artist", viewModel.Query);
+        Assert.Equal("Artist", client.LastArtistOptions?.Query);
     }
 
     [Fact]
@@ -299,6 +398,99 @@ public sealed class SearchViewModelTests
     }
 
     [Fact]
+    public async Task GenreSearchUsesStorefrontSortAndPageBasedLoadMore()
+    {
+        var client = new SearchViewModelTestClient
+        {
+            GenreResults = options => options.Offset == 0
+                ? [CreateAlbum("First")]
+                : [CreateAlbum("Second")]
+        };
+        var viewModel = new SearchViewModel(client, null, null)
+        {
+            SelectedType = "Genres",
+            Query = "https://www.qobuz.com/fr-fr/genre/k-pop/download-streaming-albums?ssf%5BsortBy%5D=main_catalog_date_desc"
+        };
+
+        await viewModel.SearchCommand.ExecuteAsync(null);
+        await viewModel.LoadMoreCommand.ExecuteAsync(null);
+
+        Assert.Equal(["First", "Second"], viewModel.Results.Select(result => result.Title));
+        Assert.Equal("Newest", viewModel.SelectedSort);
+        Assert.Equal(SearchGenreSortOption.Newest, client.LastGenreOptions?.GenreSort);
+        Assert.Equal(2, client.GenreSearchCount);
+        Assert.Equal(1, client.LastGenreOptions?.Offset);
+    }
+
+    [Fact]
+    public async Task GenreSearchDoesNotOverrideManualSortSelectionOnSearch()
+    {
+        var client = new SearchViewModelTestClient
+        {
+            GenreResults = _ => [CreateAlbum("First")]
+        };
+        var viewModel = new SearchViewModel(client, null, null)
+        {
+            SelectedType = "Genres",
+            Query = "https://www.qobuz.com/fr-fr/genre/k-pop/download-streaming-albums?ssf%5BsortBy%5D=main_catalog_date_desc",
+            SelectedSort = "Best Sellers"
+        };
+
+        await viewModel.SearchCommand.ExecuteAsync(null);
+
+        Assert.Equal(SearchGenreSortOption.BestSellers, client.LastGenreOptions?.GenreSort);
+    }
+
+    [Fact]
+    public void SelectingGenresKeepsPageSizeBindingOnValidIntegerOptions()
+    {
+        var viewModel = new SearchViewModel(null, null, null)
+        {
+            SelectedType = "Genres"
+        };
+
+        Assert.False(viewModel.IsResultsPerPageVisible);
+        Assert.Equal(25, viewModel.SelectedLimit);
+        Assert.Contains(25, viewModel.LimitOptions);
+
+        viewModel.SelectedType = "Albums";
+
+        Assert.True(viewModel.IsResultsPerPageVisible);
+        Assert.Equal(25, viewModel.SelectedLimit);
+        Assert.Contains(25, viewModel.LimitOptions);
+    }
+
+    [Fact]
+    public async Task PreviewPlaybackStateMarksOnlyMatchingTrackAsActive()
+    {
+        var client = new SearchViewModelTestClient
+        {
+            AlbumResults = _ => [CreateAlbum("Album")],
+            AlbumTrackResult = albumId => CreateAlbumWithTrack(albumId, "track-1")
+        };
+        var viewModel = new SearchViewModel(client, null, null)
+        {
+            Query = "album"
+        };
+
+        await viewModel.SearchCommand.ExecuteAsync(null);
+        var result = Assert.Single(viewModel.Results);
+        await result.ToggleExpandedCommand.ExecuteAsync(null);
+        var firstTrack = Assert.Single(result.Tracks);
+
+        viewModel.UpdatePreviewPlaybackState(firstTrack.TrackId, previewIsPlaying: true);
+
+        Assert.True(firstTrack.IsPreviewActive);
+        Assert.True(firstTrack.IsPreviewPlaying);
+
+        viewModel.UpdatePreviewPlaybackState("other-track", previewIsPlaying: true);
+
+        Assert.False(firstTrack.IsPreviewActive);
+        Assert.False(firstTrack.IsPreviewPlaying);
+    }
+
+
+    [Fact]
     public async Task ClearingSearchResultsSchedulesMemoryCleanupWithoutRunningInline()
     {
         var client = new SearchViewModelTestClient
@@ -371,12 +563,19 @@ public sealed class SearchViewModelTests
         public IReadOnlyList<SearchLabelResult> LabelResults { get; init; } = [];
         public IReadOnlyList<SearchPlaylistResult> PlaylistResults { get; init; } = [];
         public Func<SearchQueryOptions, IReadOnlyList<SearchAlbumResult>> AlbumResults { get; init; } = _ => [];
+        public Func<SearchQueryOptions, IReadOnlyList<SearchTrackResult>> TrackResults { get; init; } = _ => [];
+        public Func<SearchQueryOptions, IReadOnlyList<SearchAlbumResult>> GenreResults { get; init; } = _ => [];
+        public Func<string, SearchAlbumResult>? AlbumTrackResult { get; init; }
         public Func<SearchQueryOptions, CancellationToken, IAsyncEnumerable<SearchAlbumResult>>? ArtistAlbumResults { get; init; }
         public Func<string, int, int, SearchPlaylistTrackPage> PlaylistTrackPages { get; init; } = (_, _, _) => new SearchPlaylistTrackPage(0, []);
         public List<(int Limit, int Offset)> PlaylistTrackRequests { get; } = [];
+        public List<string> AlbumTrackRequests { get; } = [];
+        public SearchQueryOptions? LastArtistOptions { get; private set; }
         public SearchQueryOptions? LastArtistAlbumOptions { get; private set; }
+        public SearchQueryOptions? LastGenreOptions { get; private set; }
         public int AlbumSearchCount { get; private set; }
         public int ArtistAlbumSearchCount { get; private set; }
+        public int GenreSearchCount { get; private set; }
 
         public Task<IReadOnlyList<SearchAlbumResult>> SearchAlbumsAsync(
             SearchQueryOptions options,
@@ -389,7 +588,7 @@ public sealed class SearchViewModelTests
         public Task<IReadOnlyList<SearchTrackResult>> SearchTracksAsync(
             SearchQueryOptions options,
             CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<SearchTrackResult>>([]);
+            Task.FromResult(TrackResults(options));
 
         public Task<IReadOnlyList<SearchPlaylistResult>> SearchPlaylistsAsync(
             SearchQueryOptions options,
@@ -413,8 +612,11 @@ public sealed class SearchViewModelTests
 
         public Task<IReadOnlyList<SearchArtistResult>> SearchArtistsAsync(
             SearchQueryOptions options,
-            CancellationToken cancellationToken = default) =>
-            Task.FromResult(ArtistResults);
+            CancellationToken cancellationToken = default)
+        {
+            LastArtistOptions = options;
+            return Task.FromResult(ArtistResults);
+        }
 
         public Task<IReadOnlyList<SearchAlbumResult>> SearchArtistAlbumsAsync(
             SearchQueryOptions options,
@@ -451,10 +653,27 @@ public sealed class SearchViewModelTests
             CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<SearchAlbumResult>>([]);
 
+        public Task<IReadOnlyList<SearchAlbumResult>> SearchGenreAlbumsAsync(
+            SearchQueryOptions options,
+            CancellationToken cancellationToken = default)
+        {
+            LastGenreOptions = options;
+            GenreSearchCount++;
+            return Task.FromResult(GenreResults(options));
+        }
+
         public Task<SearchAlbumResult> GetAlbumTracksAsync(
             string albumId,
-            CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException();
+            CancellationToken cancellationToken = default)
+        {
+            AlbumTrackRequests.Add(albumId);
+            if (AlbumTrackResult is null)
+            {
+                throw new NotSupportedException();
+            }
+
+            return Task.FromResult(AlbumTrackResult(albumId));
+        }
     }
 
     private sealed class CapturingSearchMemoryCleanupScheduler : ISearchMemoryCleanupScheduler
@@ -480,6 +699,52 @@ public sealed class SearchViewModelTests
 
     private static SearchAlbumResult CreateAlbum(string title)
     {
+        return CreateAlbum(title, title);
+    }
+
+    private static SearchAlbumResult CreateAlbum(string albumId, string title)
+    {
+        return new SearchAlbumResult(
+            AlbumId: albumId,
+            Title: title,
+            Version: string.Empty,
+            Artist: "Artist",
+            Quality: "FLAC 16/44.1",
+            ReleaseDate: "2024-01-01",
+            Upc: null,
+            ThumbnailUrl: string.Empty,
+            WebPlayerUrl: string.Empty,
+            StoreUrl: string.Empty,
+            TotalTracks: 1,
+            TotalDiscs: 1,
+            Explicit: false,
+            Tracks: []);
+    }
+
+    private static SearchTrackResult CreateTrack(
+        string trackId,
+        string albumId,
+        string artistId = "12345")
+    {
+        return new SearchTrackResult(
+            TrackId: trackId,
+            AlbumId: albumId,
+            ArtistId: artistId,
+            Title: "Track",
+            Version: string.Empty,
+            Artist: "Artist",
+            AlbumTitle: "Source Album",
+            Quality: "FLAC 16/44.1",
+            Duration: TimeSpan.FromSeconds(30),
+            ReleaseDate: "2024-01-01",
+            ThumbnailUrl: string.Empty,
+            WebPlayerUrl: string.Empty,
+            StoreUrl: string.Empty,
+            Explicit: false);
+    }
+
+    private static SearchAlbumResult CreateAlbumWithTrack(string title, string trackId)
+    {
         return new SearchAlbumResult(
             AlbumId: title,
             Title: title,
@@ -494,7 +759,20 @@ public sealed class SearchViewModelTests
             TotalTracks: 1,
             TotalDiscs: 1,
             Explicit: false,
-            Tracks: []);
+            Tracks:
+            [
+                new SearchAlbumTrack(
+                    TrackId: trackId,
+                    TrackNumber: 1,
+                    DiscNumber: 1,
+                    Title: "Track",
+                    Version: string.Empty,
+                    Work: string.Empty,
+                    Composer: string.Empty,
+                    Duration: TimeSpan.FromSeconds(30),
+                    Quality: "FLAC 16/44.1",
+                    Explicit: false)
+            ]);
     }
 
     private static SearchPlaylistResult CreatePlaylist(int totalTracks)

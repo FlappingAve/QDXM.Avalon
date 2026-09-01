@@ -1,10 +1,12 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace QDXM.Avalon.ViewModels;
 
 public partial class AlbumTrackSelectionViewModel : ViewModelBase
 {
     private readonly Action<AlbumTrackSelectionViewModel>? selectionChanged;
+    private readonly Func<AlbumTrackSelectionViewModel, Task>? previewRequested;
 
     public AlbumTrackSelectionViewModel(
         string trackId,
@@ -24,7 +26,8 @@ public partial class AlbumTrackSelectionViewModel : ViewModelBase
         int? albumDiscNumber = null,
         string? albumPositionDisplay = null,
         string? artist = null,
-        string? albumTitle = null)
+        string? albumTitle = null,
+        Func<AlbumTrackSelectionViewModel, Task>? previewRequested = null)
     {
         TrackId = trackId;
         TrackNumber = trackNumber;
@@ -43,6 +46,7 @@ public partial class AlbumTrackSelectionViewModel : ViewModelBase
         Artist = artist ?? string.Empty;
         AlbumTitle = albumTitle ?? string.Empty;
         this.selectionChanged = selectionChanged;
+        this.previewRequested = previewRequested;
         this.isSelected = isSelected;
     }
 
@@ -68,8 +72,23 @@ public partial class AlbumTrackSelectionViewModel : ViewModelBase
     [ObservableProperty]
     private bool isSelected;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPreviewIdle))]
+    private bool isPreviewActive;
+
+    [ObservableProperty]
+    private bool isPreviewPlaying;
+
+    public bool IsPreviewIdle => !IsPreviewActive;
+
     partial void OnIsSelectedChanged(bool value)
     {
         selectionChanged?.Invoke(this);
+    }
+
+    [RelayCommand]
+    private Task PlayPreview()
+    {
+        return previewRequested?.Invoke(this) ?? Task.CompletedTask;
     }
 }

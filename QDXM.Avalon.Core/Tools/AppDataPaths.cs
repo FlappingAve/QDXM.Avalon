@@ -4,6 +4,7 @@ public static class AppDataPaths
 {
     public const string AppName = "QDXM Avalon";
     public const string CredentialTargetName = "QDXM Avalon/UserAuth";
+    public const string PreviewCredentialTargetName = "QDXM Avalon/PreviewUserAuth";
 
     public static string AppDirectory => GetAppDirectory();
 
