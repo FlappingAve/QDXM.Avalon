@@ -9,13 +9,21 @@ public static class SearchPageSizeOptions
 
     public static IReadOnlyList<int> ForType(SearchResultType type)
     {
-        return type is SearchResultType.ArtistAlbums
-            ? ArtistAlbumOptions
-            : DefaultOptions;
+        return type switch
+        {
+            SearchResultType.ArtistAlbums => ArtistAlbumOptions,
+            SearchResultType.Genres => [],
+            _ => DefaultOptions
+        };
     }
 
     public static int ClampLimit(SearchResultType type, int limit)
     {
+        if (type is SearchResultType.Genres)
+        {
+            return 0;
+        }
+
         var max = type is SearchResultType.ArtistAlbums
             ? QobuzApiLimits.ArtistReleasePageSize
             : QobuzApiLimits.SearchPageSize;

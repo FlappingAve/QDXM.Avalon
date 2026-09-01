@@ -8,5 +8,6 @@ public enum SearchResultType
     Artist,
     ArtistAlbums,
     Label,
-    LabelAlbums
+    LabelAlbums,
+    Genres
 }

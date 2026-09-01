@@ -16,7 +16,7 @@ public sealed class QobuzStorefrontSearchConfigProvider
     private Task<QobuzStorefrontSearchConfig>? configTask;
 
     public QobuzStorefrontSearchConfigProvider()
-        : this(new HttpClient())
+        : this(QobuzStorefrontHttpClientFactory.Create())
     {
     }
 

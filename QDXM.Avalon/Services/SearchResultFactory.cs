@@ -13,7 +13,12 @@ public sealed class SearchResultFactory
     private readonly Func<SearchResultViewModel, Task> downloadPrimary;
     private readonly Func<SearchResultViewModel, Task> downloadSelected;
     private readonly Func<SearchResultViewModel, Task> openEntityAlbums;
+    private readonly Func<SearchResultViewModel, Task> downloadSourceAlbum;
+    private readonly Func<SearchResultViewModel, Task> openSourceAlbum;
+    private readonly Func<SearchResultViewModel, Task> openSourceArtist;
     private readonly Action<SearchResultViewModel> trackSelectionChanged;
+    private readonly Func<PreviewTrackRequest, Task>? previewTrack;
+    private readonly Action<string>? clearPreviewContext;
     private readonly RemoteImageCache imageCache;
 
     public SearchResultFactory(
@@ -24,7 +29,12 @@ public sealed class SearchResultFactory
         Func<SearchResultViewModel, Task> downloadPrimary,
         Func<SearchResultViewModel, Task> downloadSelected,
         Func<SearchResultViewModel, Task> openEntityAlbums,
+        Func<SearchResultViewModel, Task> downloadSourceAlbum,
+        Func<SearchResultViewModel, Task> openSourceAlbum,
+        Func<SearchResultViewModel, Task> openSourceArtist,
         Action<SearchResultViewModel> trackSelectionChanged,
+        Func<PreviewTrackRequest, Task>? previewTrack = null,
+        Action<string>? clearPreviewContext = null,
         RemoteImageCache? imageCache = null)
     {
         this.actionCompleted = actionCompleted;
@@ -34,7 +44,12 @@ public sealed class SearchResultFactory
         this.downloadPrimary = downloadPrimary;
         this.downloadSelected = downloadSelected;
         this.openEntityAlbums = openEntityAlbums;
+        this.downloadSourceAlbum = downloadSourceAlbum;
+        this.openSourceAlbum = openSourceAlbum;
+        this.openSourceArtist = openSourceArtist;
         this.trackSelectionChanged = trackSelectionChanged;
+        this.previewTrack = previewTrack;
+        this.clearPreviewContext = clearPreviewContext;
         this.imageCache = imageCache ?? RemoteImageCache.Shared;
     }
 
@@ -46,6 +61,7 @@ public sealed class SearchResultFactory
             loadTrackPage: null,
             downloadPrimary,
             downloadSelected,
+            clearPreviewContext: clearPreviewContext,
             imageCache: imageCache)
         {
             Id = album.AlbumId,
@@ -55,7 +71,7 @@ public sealed class SearchResultFactory
             Artist = album.Artist,
             Quality = album.Quality,
             ReleaseDate = album.ReleaseDate,
-            TracksDisplay = FormatTrackCount(album.TotalTracks),
+            TracksDisplay = SearchResultDisplayText.FormatTrackCount(album.TotalTracks),
             TotalTracks = album.TotalTracks,
             TotalDiscs = album.TotalDiscs,
             Explicit = album.Explicit,
@@ -83,9 +99,15 @@ public sealed class SearchResultFactory
             loadTrackPage: null,
             downloadPrimary,
             downloadSelected: null,
+            downloadSourceAlbum: downloadSourceAlbum,
+            openSourceAlbum: openSourceAlbum,
+            openSourceArtist: openSourceArtist,
+            previewPrimary: previewTrack,
             imageCache: imageCache)
         {
             Id = track.TrackId,
+            AlbumId = track.AlbumId,
+            ArtistId = track.ArtistId,
             IsAlbum = false,
             Title = track.Title,
             Version = track.Version,
@@ -114,6 +136,7 @@ public sealed class SearchResultFactory
             loadPlaylistTrackPage,
             downloadPrimary,
             downloadSelected,
+            clearPreviewContext: clearPreviewContext,
             imageCache: imageCache)
         {
             Id = playlist.PlaylistId,
@@ -123,7 +146,7 @@ public sealed class SearchResultFactory
             Artist = playlist.Owner,
             Quality = string.Empty,
             ReleaseDate = playlist.UpdatedDate,
-            TracksDisplay = FormatTrackCount(playlist.TotalTracks),
+            TracksDisplay = SearchResultDisplayText.FormatTrackCount(playlist.TotalTracks),
             TotalTracks = playlist.TotalTracks,
             TotalDiscs = 1,
             WebPlayerUrl = playlist.WebPlayerUrl,
@@ -198,7 +221,8 @@ public sealed class SearchResultFactory
             {
                 owner.NotifyTrackSelectionChanged();
                 trackSelectionChanged(owner);
-            });
+            },
+            previewRequested: selection => PlayPreviewTrack(selection, owner));
     }
 
     public AlbumTrackSelectionViewModel CreatePlaylistTrackSelection(
@@ -228,12 +252,30 @@ public sealed class SearchResultFactory
             albumDiscNumber: track.AlbumDiscNumber,
             albumPositionDisplay: track.AlbumPositionDisplay,
             artist: track.Artist,
-            albumTitle: track.AlbumTitle);
+            albumTitle: track.AlbumTitle,
+            previewRequested: selection => PlayPreviewTrack(selection, owner));
     }
 
-    private static string FormatTrackCount(int tracks)
+    private Task PlayPreviewTrack(
+        AlbumTrackSelectionViewModel track,
+        SearchResultViewModel owner)
     {
-        return tracks == 1 ? "1 track" : $"{tracks} tracks";
+        return previewTrack?.Invoke(CreatePreviewTrackRequest(track, owner)) ?? Task.CompletedTask;
+    }
+
+    private static PreviewTrackRequest CreatePreviewTrackRequest(
+        AlbumTrackSelectionViewModel track,
+        SearchResultViewModel owner)
+    {
+        var albumTitle = !string.IsNullOrWhiteSpace(track.AlbumTitle)
+            ? track.AlbumTitle
+            : owner.Title;
+
+        return new PreviewTrackRequest(
+            track.TrackId,
+            track.Title,
+            albumTitle,
+            owner.PreviewContextKey);
     }
 
     private static string FormatAlbumCount(int albums)

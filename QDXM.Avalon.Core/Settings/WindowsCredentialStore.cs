@@ -9,9 +9,21 @@ namespace QDXM.Avalon.Core.Settings;
 
 public sealed class WindowsCredentialStore : IUserCredentialStore
 {
-    private const string TargetName = AppDataPaths.CredentialTargetName;
     private const int CredTypeGeneric = 1;
     private const int CredPersistLocalMachine = 2;
+    private readonly string targetName;
+
+    public WindowsCredentialStore()
+        : this(AppDataPaths.CredentialTargetName)
+    {
+    }
+
+    public WindowsCredentialStore(string targetName)
+    {
+        this.targetName = string.IsNullOrWhiteSpace(targetName)
+            ? throw new ArgumentException("Credential target name is required.", nameof(targetName))
+            : targetName;
+    }
 
     public Task<UserCredential?> ReadAsync(CancellationToken cancellationToken = default)
     {
@@ -22,7 +34,7 @@ public sealed class WindowsCredentialStore : IUserCredentialStore
             return Task.FromResult<UserCredential?>(null);
         }
 
-        if (!CredRead(TargetName, CredTypeGeneric, 0, out var credentialPointer))
+        if (!CredRead(targetName, CredTypeGeneric, 0, out var credentialPointer))
         {
             var error = Marshal.GetLastWin32Error();
             if (error == 1168)
@@ -108,7 +120,7 @@ public sealed class WindowsCredentialStore : IUserCredentialStore
                 LastWritten = default,
                 Persist = CredPersistLocalMachine,
                 TargetAlias = IntPtr.Zero,
-                TargetName = TargetName,
+                TargetName = targetName,
                 Type = CredTypeGeneric,
                 UserName = userNamePointer
             };
@@ -143,7 +155,7 @@ public sealed class WindowsCredentialStore : IUserCredentialStore
             return Task.CompletedTask;
         }
 
-        if (!CredDelete(TargetName, CredTypeGeneric, 0))
+        if (!CredDelete(targetName, CredTypeGeneric, 0))
         {
             var error = Marshal.GetLastWin32Error();
             if (error != 1168)

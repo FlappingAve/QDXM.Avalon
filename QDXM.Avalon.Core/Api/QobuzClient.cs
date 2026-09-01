@@ -10,7 +10,8 @@ public sealed class QobuzClient : IQobuzClient, IDisposable
     private readonly QobuzApiServiceFactory serviceFactory;
     private readonly QobuzStorefrontSearchConfigProvider storefrontSearchConfigProvider;
     private readonly Lazy<QobuzApiService> service;
-    private readonly Lazy<HttpClient> labelSearchClient = new(CreateLabelSearchClient);
+    private readonly Lazy<HttpClient> labelSearchClient = new(QobuzStorefrontHttpClientFactory.Create);
+    private readonly Lazy<QobuzGenreStorefrontClient> genreStorefrontClient = new(() => new QobuzGenreStorefrontClient());
 
     public QobuzClient(
         QobuzApiServiceFactory? serviceFactory = null,
@@ -290,6 +291,13 @@ public sealed class QobuzClient : IQobuzClient, IDisposable
         }, cancellationToken);
     }
 
+    public Task<IReadOnlyList<SearchAlbumResult>> SearchGenreAlbumsAsync(
+        SearchQueryOptions options,
+        CancellationToken cancellationToken = default)
+    {
+        return genreStorefrontClient.Value.SearchGenreAlbumsAsync(options, cancellationToken);
+    }
+
     public Task<SearchAlbumResult> GetAlbumTracksAsync(
         string albumId,
         CancellationToken cancellationToken = default)
@@ -326,13 +334,11 @@ public sealed class QobuzClient : IQobuzClient, IDisposable
         {
             labelSearchClient.Value.Dispose();
         }
-    }
 
-    private static HttpClient CreateLabelSearchClient()
-    {
-        var client = new HttpClient();
-        client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0");
-        return client;
+        if (genreStorefrontClient.IsValueCreated)
+        {
+            genreStorefrontClient.Value.Dispose();
+        }
     }
 
     private static string GetArtistAlbumSort(SearchArtistAlbumSortOption sort)

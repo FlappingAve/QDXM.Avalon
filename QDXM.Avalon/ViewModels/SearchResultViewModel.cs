@@ -17,6 +17,11 @@ public partial class SearchResultViewModel : ViewModelBase
     private readonly Func<SearchResultViewModel, Task>? downloadPrimary;
     private readonly Func<SearchResultViewModel, Task>? downloadSelected;
     private readonly Func<SearchResultViewModel, Task>? openAlbums;
+    private readonly Func<SearchResultViewModel, Task>? downloadSourceAlbum;
+    private readonly Func<SearchResultViewModel, Task>? openSourceAlbum;
+    private readonly Func<SearchResultViewModel, Task>? openSourceArtist;
+    private readonly Func<PreviewTrackRequest, Task>? previewPrimary;
+    private readonly Action<string>? clearPreviewContext;
     private readonly RemoteImageCache imageCache;
     private readonly Dictionary<int, IReadOnlyList<AlbumTrackSelectionViewModel>> trackPageCache = [];
     private readonly List<string> playlistSelectionOrder = [];
@@ -30,6 +35,11 @@ public partial class SearchResultViewModel : ViewModelBase
         Func<SearchResultViewModel, Task>? downloadPrimary = null,
         Func<SearchResultViewModel, Task>? downloadSelected = null,
         Func<SearchResultViewModel, Task>? openAlbums = null,
+        Func<SearchResultViewModel, Task>? downloadSourceAlbum = null,
+        Func<SearchResultViewModel, Task>? openSourceAlbum = null,
+        Func<SearchResultViewModel, Task>? openSourceArtist = null,
+        Func<PreviewTrackRequest, Task>? previewPrimary = null,
+        Action<string>? clearPreviewContext = null,
         RemoteImageCache? imageCache = null)
     {
         this.actionCompleted = actionCompleted;
@@ -38,10 +48,17 @@ public partial class SearchResultViewModel : ViewModelBase
         this.downloadPrimary = downloadPrimary;
         this.downloadSelected = downloadSelected;
         this.openAlbums = openAlbums;
+        this.downloadSourceAlbum = downloadSourceAlbum;
+        this.openSourceAlbum = openSourceAlbum;
+        this.openSourceArtist = openSourceArtist;
+        this.previewPrimary = previewPrimary;
+        this.clearPreviewContext = clearPreviewContext;
         this.imageCache = imageCache ?? RemoteImageCache.Shared;
     }
 
     public string Id { get; init; } = string.Empty;
+    public string AlbumId { get; init; } = string.Empty;
+    public string ArtistId { get; init; } = string.Empty;
     public bool IsAlbum { get; init; } = true;
     public bool IsPlaylist { get; init; }
     public bool IsArtist { get; init; }
@@ -51,6 +68,14 @@ public partial class SearchResultViewModel : ViewModelBase
     public bool CanExpand => IsAlbum || IsPlaylist;
     public bool IsEntityResult => IsArtist || IsLabel;
     public bool IsNotEntityResult => !IsEntityResult;
+    public bool IsTrackResult => !CanExpand && IsNotEntityResult;
+    public bool CanUseTrackAlbumActions => IsTrackResult && !string.IsNullOrWhiteSpace(AlbumId);
+    public bool CanPlayPrimaryPreview => previewPrimary is not null && !CanExpand && IsNotEntityResult;
+    public string PreviewContextKey => IsPlaylist
+        ? $"playlist:{Id}"
+        : IsAlbum
+            ? $"album:{Id}"
+            : $"track:{Id}";
     public string Title { get; init; } = string.Empty;
     public string Version { get; init; } = string.Empty;
     public string AlbumTitle { get; init; } = string.Empty;
@@ -86,6 +111,15 @@ public partial class SearchResultViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(IsCollapsed))]
     [NotifyPropertyChangedFor(nameof(HasSelectedTrackSummary))]
     private bool isExpanded;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPreviewIdle))]
+    private bool isPreviewActive;
+
+    [ObservableProperty]
+    private bool isPreviewPlaying;
+
+    public bool IsPreviewIdle => !IsPreviewActive;
 
     public bool IsCollapsed => !IsExpanded;
     public bool ExpandedTrackListVisible => CanExpand && IsExpanded;
@@ -174,6 +208,11 @@ public partial class SearchResultViewModel : ViewModelBase
         IsExpanded = isExpanding;
         NotifyTrackSelectionChanged();
 
+        if (!isExpanding)
+        {
+            clearPreviewContext?.Invoke(PreviewContextKey);
+        }
+
         if (isExpanding && Tracks.Count == 0 && loadTracks is not null)
         {
             await loadTracks(this);
@@ -189,6 +228,7 @@ public partial class SearchResultViewModel : ViewModelBase
             return;
         }
 
+        clearPreviewContext?.Invoke(PreviewContextKey);
         await loadTrackPage(this, TrackPageIndex - 1);
     }
 
@@ -200,6 +240,7 @@ public partial class SearchResultViewModel : ViewModelBase
             return;
         }
 
+        clearPreviewContext?.Invoke(PreviewContextKey);
         await loadTrackPage(this, TrackPageIndex + 1);
     }
 
@@ -231,6 +272,48 @@ public partial class SearchResultViewModel : ViewModelBase
         }
 
         actionCompleted(this, $"{SelectedTrackCount} selected tracks queued");
+    }
+
+    [RelayCommand]
+    private async Task PlayPreview()
+    {
+        if (previewPrimary is null)
+        {
+            return;
+        }
+
+        await previewPrimary(new PreviewTrackRequest(
+            Id,
+            Title,
+            AlbumTitle,
+            PreviewContextKey));
+    }
+
+    [RelayCommand]
+    private async Task DownloadSourceAlbum()
+    {
+        if (downloadSourceAlbum is not null)
+        {
+            await downloadSourceAlbum(this);
+        }
+    }
+
+    [RelayCommand]
+    private async Task GoToSourceAlbum()
+    {
+        if (openSourceAlbum is not null)
+        {
+            await openSourceAlbum(this);
+        }
+    }
+
+    [RelayCommand]
+    private async Task GoToSourceArtist()
+    {
+        if (openSourceArtist is not null)
+        {
+            await openSourceArtist(this);
+        }
     }
 
     [RelayCommand]
@@ -298,13 +381,37 @@ public partial class SearchResultViewModel : ViewModelBase
         }
 
         TotalTracks = totalTracks;
-        TracksDisplay = FormatTrackCount(totalTracks);
+        TracksDisplay = SearchResultDisplayText.FormatTrackCount(totalTracks);
         OnPropertyChanged(nameof(TotalTracks));
         OnPropertyChanged(nameof(TracksDisplay));
         OnPropertyChanged(nameof(TrackPageCount));
         OnPropertyChanged(nameof(CanGoNextTrackPage));
         OnPropertyChanged(nameof(TrackPageText));
         OnPropertyChanged(nameof(TrackRangeText));
+    }
+
+    public void UpdatePreviewState(string activeTrackId, bool previewIsPlaying)
+    {
+        var activePrimary = CanPlayPrimaryPreview &&
+            !string.IsNullOrWhiteSpace(activeTrackId) &&
+            string.Equals(Id, activeTrackId, StringComparison.Ordinal);
+        IsPreviewActive = activePrimary;
+        IsPreviewPlaying = activePrimary && previewIsPlaying;
+
+        var updatedTracks = new HashSet<AlbumTrackSelectionViewModel>();
+        foreach (var track in Tracks)
+        {
+            UpdateTrackPreviewState(track, activeTrackId, previewIsPlaying);
+            updatedTracks.Add(track);
+        }
+
+        foreach (var track in trackPageCache.Values.SelectMany(page => page))
+        {
+            if (updatedTracks.Add(track))
+            {
+                UpdateTrackPreviewState(track, activeTrackId, previewIsPlaying);
+            }
+        }
     }
 
     public void NotifyTrackSelectionChanged(AlbumTrackSelectionViewModel changedTrack)
@@ -398,9 +505,15 @@ public partial class SearchResultViewModel : ViewModelBase
             .ToList();
     }
 
-    private static string FormatTrackCount(int tracks)
+    private static void UpdateTrackPreviewState(
+        AlbumTrackSelectionViewModel track,
+        string activeTrackId,
+        bool previewIsPlaying)
     {
-        return tracks == 1 ? "1 track" : $"{tracks} tracks";
+        var active = !string.IsNullOrWhiteSpace(activeTrackId) &&
+            string.Equals(track.TrackId, activeTrackId, StringComparison.Ordinal);
+        track.IsPreviewActive = active;
+        track.IsPreviewPlaying = active && previewIsPlaying;
     }
 
     public void AttachThumbnailVisual()

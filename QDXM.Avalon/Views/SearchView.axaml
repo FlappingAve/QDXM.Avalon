@@ -50,15 +50,15 @@
         <StackPanel Grid.Column="0"
                     Orientation="Horizontal"
                     Spacing="8"
-                    IsVisible="{Binding IsArtistAlbumSortVisible}">
+                    IsVisible="{Binding IsServerSortVisible}">
           <TextBlock Text="Sort:"
                      VerticalAlignment="Center"
                      Foreground="{DynamicResource TextSecondaryBrush}"
-                     ToolTip.Tip="Server-side Qobuz ordering for artist albums. Newest-ish favors recent official releases but can include singles, remixes, and variants. Relevance is cleaner for main albums but is not chronological." />
+                     ToolTip.Tip="Server-side Qobuz ordering." />
           <ComboBox Width="126"
                     ItemsSource="{Binding SortOptions}"
                     SelectedItem="{Binding SelectedSort}"
-                    ToolTip.Tip="Server-side Qobuz ordering for artist albums. Newest-ish favors recent official releases but can include singles, remixes, and variants. Relevance is cleaner for main albums but is not chronological." />
+                    ToolTip.Tip="Server-side Qobuz ordering." />
         </StackPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
           <TextBlock Text="Arrange by:"
@@ -70,7 +70,10 @@
                     SelectedItem="{Binding SelectedArrangeBy}"
                     ToolTip.Tip="Arranges the results already loaded. Load More appends the next page using the current arrangement; changing this later rearranges everything loaded so far." />
         </StackPanel>
-        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+        <StackPanel Grid.Column="2"
+                    Orientation="Horizontal"
+                    Spacing="8"
+                    IsVisible="{Binding IsResultsPerPageVisible}">
           <TextBlock Text="Results per page:"
                      VerticalAlignment="Center"
                      Foreground="{DynamicResource TextSecondaryBrush}" />
@@ -108,6 +111,16 @@
                         AttachedToVisualTree="SearchResult_OnAttachedToVisualTree"
                         DetachedFromVisualTree="SearchResult_OnDetachedFromVisualTree"
                         DataContextChanged="SearchResult_OnDataContextChanged">
+                <Border.ContextMenu>
+                  <ContextMenu IsVisible="{Binding CanUseTrackAlbumActions}">
+                    <MenuItem Header="Download Album"
+                              Command="{Binding DownloadSourceAlbumCommand}" />
+                    <MenuItem Header="Go to Album"
+                              Command="{Binding GoToSourceAlbumCommand}" />
+                    <MenuItem Header="Go to Artist"
+                              Command="{Binding GoToSourceArtistCommand}" />
+                  </ContextMenu>
+                </Border.ContextMenu>
                 <Grid RowDefinitions="Auto,Auto">
                   <Border Grid.RowSpan="2"
                           Width="46"
@@ -250,6 +263,26 @@
                         <TextBlock Text="Selected" />
                       </StackPanel>
                     </Button>
+                    <Button Grid.Column="7"
+                            Classes="secondary"
+                            Command="{Binding PlayPreviewCommand}"
+                            IsVisible="{Binding CanPlayPrimaryPreview}"
+                            Padding="11,8">
+                      <StackPanel Orientation="Horizontal" Spacing="7">
+                        <ic:FluentIcon Icon="Play"
+                                       IconVariant="Filled"
+                                       IconSize="Size24"
+                                       FontSize="20"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       IsVisible="{Binding IsPreviewIdle}" />
+                        <controls:PreviewPlayingIndicator Width="20"
+                                                          Height="20"
+                                                          IsPlaying="{Binding IsPreviewPlaying}"
+                                                          BarBrush="{DynamicResource TextPrimaryBrush}"
+                                                          IsVisible="{Binding IsPreviewActive}" />
+                        <TextBlock Text="Track" />
+                      </StackPanel>
+                    </Button>
                   </Grid>
 
                   <Grid Grid.Row="1" IsVisible="{Binding AlbumExpandedTrackListVisible}" Margin="46,12,0,0">
@@ -274,15 +307,16 @@
                               Background="#202326"
                               ZIndex="1">
                           <Grid Grid.Column="0"
-                                ColumnDefinitions="46,60,*,120,130">
+                                ColumnDefinitions="46,60,36,*,120,130">
                             <CheckBox Grid.Column="0"
                                       IsChecked="{Binding AllTracksSelected}"
                                       HorizontalAlignment="Center"
                                       VerticalAlignment="Center" />
                             <TextBlock Grid.Column="1" Text="#" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="2" Text="Track Title" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="3" Text="Duration" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="4" Text="Quality" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Text="P" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="3" Text="Track Title" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="4" Text="Duration" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="5" Text="Quality" VerticalAlignment="Center" />
                           </Grid>
                         </Grid>
                         <ItemsControl Grid.Row="1" ItemsSource="{Binding AlbumTrackRows}">
@@ -300,21 +334,40 @@
                                              MaxLines="1"
                                              Margin="14,10,0,6"
                                              IsVisible="{Binding IsWorkHeader}" />
-                                  <Grid ColumnDefinitions="46,60,*,120,130"
+                                  <Grid ColumnDefinitions="46,60,36,*,120,130"
                                         RowDefinitions="36,Auto"
                                         IsVisible="{Binding IsTrack}">
                                     <CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding Track.IsSelected}" VerticalAlignment="Center" HorizontalAlignment="Center" />
                                     <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Track.TrackNumberDisplay}" VerticalAlignment="Center" />
+                                    <Button Grid.Row="0"
+                                            Grid.Column="2"
+                                            Classes="iconOnly"
+                                            Command="{Binding Track.PlayPreviewCommand}"
+                                            ToolTip.Tip="Play preview">
+                                      <Grid Width="20" Height="20">
+                                        <ic:FluentIcon Icon="PlayCircle"
+                                                       IconVariant="Filled"
+                                                       IconSize="Size20"
+                                                       FontSize="18"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                                       IsVisible="{Binding Track.IsPreviewIdle}" />
+                                        <controls:PreviewPlayingIndicator Width="18"
+                                                                          Height="18"
+                                                                          IsPlaying="{Binding Track.IsPreviewPlaying}"
+                                                                          BarBrush="{DynamicResource TextPrimaryBrush}"
+                                                                          IsVisible="{Binding Track.IsPreviewActive}" />
+                                      </Grid>
+                                    </Button>
                                     <TextBlock Grid.Row="0"
-                                               Grid.Column="2"
+                                               Grid.Column="3"
                                                Text="{Binding Track.Title}"
                                                VerticalAlignment="Center"
                                                TextTrimming="CharacterEllipsis"
                                                MaxLines="1" />
-                                    <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding Track.Duration}" VerticalAlignment="Center" />
-                                    <TextBlock Grid.Row="0" Grid.Column="4" Text="{Binding Track.Quality}" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Row="0" Grid.Column="4" Text="{Binding Track.Duration}" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Row="0" Grid.Column="5" Text="{Binding Track.Quality}" VerticalAlignment="Center" />
                                     <TextBlock Grid.Row="1"
-                                               Grid.Column="2"
+                                               Grid.Column="3"
                                                Grid.ColumnSpan="3"
                                                Text="{Binding Track.Version}"
                                                Foreground="{DynamicResource TextSecondaryBrush}"
@@ -380,16 +433,17 @@
                                 Background="#202326"
                                 ZIndex="1">
                             <Grid Grid.Column="0"
-                                  ColumnDefinitions="46,68,2*,1.5*,1.7*,92">
+                                  ColumnDefinitions="46,68,36,2*,1.5*,1.7*,92">
                               <CheckBox Grid.Column="0"
                                         IsChecked="{Binding AllTracksSelected}"
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center" />
                               <TextBlock Grid.Column="1" Text="#" VerticalAlignment="Center" />
-                              <TextBlock Grid.Column="2" Text="Track Title" VerticalAlignment="Center" />
-                              <TextBlock Grid.Column="3" Text="Artist" VerticalAlignment="Center" />
-                              <TextBlock Grid.Column="4" Text="Album" VerticalAlignment="Center" />
-                              <TextBlock Grid.Column="5" Text="Duration" VerticalAlignment="Center" />
+                              <TextBlock Grid.Column="2" Text="P" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                              <TextBlock Grid.Column="3" Text="Track Title" VerticalAlignment="Center" />
+                              <TextBlock Grid.Column="4" Text="Artist" VerticalAlignment="Center" />
+                              <TextBlock Grid.Column="5" Text="Album" VerticalAlignment="Center" />
+                              <TextBlock Grid.Column="6" Text="Duration" VerticalAlignment="Center" />
                             </Grid>
                           </Grid>
                           <ItemsControl Grid.Row="1" ItemsSource="{Binding Tracks}">
@@ -397,31 +451,50 @@
                               <DataTemplate>
                                 <Grid ColumnDefinitions="*,24" Background="#191b1e">
                                   <Grid Grid.Column="0"
-                                        ColumnDefinitions="46,68,2*,1.5*,1.7*,92"
+                                        ColumnDefinitions="46,68,36,2*,1.5*,1.7*,92"
                                         RowDefinitions="36,Auto">
                                     <CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" HorizontalAlignment="Center" />
                                     <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding PlaylistPositionDisplay}" VerticalAlignment="Center" />
+                                    <Button Grid.Row="0"
+                                            Grid.Column="2"
+                                            Classes="iconOnly"
+                                            Command="{Binding PlayPreviewCommand}"
+                                            ToolTip.Tip="Play preview">
+                                      <Grid Width="20" Height="20">
+                                        <ic:FluentIcon Icon="PlayCircle"
+                                                       IconVariant="Filled"
+                                                       IconSize="Size20"
+                                                       FontSize="18"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                                       IsVisible="{Binding IsPreviewIdle}" />
+                                        <controls:PreviewPlayingIndicator Width="18"
+                                                                          Height="18"
+                                                                          IsPlaying="{Binding IsPreviewPlaying}"
+                                                                          BarBrush="{DynamicResource TextPrimaryBrush}"
+                                                                          IsVisible="{Binding IsPreviewActive}" />
+                                      </Grid>
+                                    </Button>
                                     <TextBlock Grid.Row="0"
-                                               Grid.Column="2"
+                                               Grid.Column="3"
                                                Text="{Binding Title}"
                                                VerticalAlignment="Center"
                                                TextTrimming="CharacterEllipsis"
                                                MaxLines="1" />
                                     <TextBlock Grid.Row="0"
-                                               Grid.Column="3"
+                                               Grid.Column="4"
                                                Text="{Binding Artist}"
                                                VerticalAlignment="Center"
                                                TextTrimming="CharacterEllipsis"
                                                MaxLines="1" />
                                     <TextBlock Grid.Row="0"
-                                               Grid.Column="4"
+                                               Grid.Column="5"
                                                Text="{Binding AlbumTitle}"
                                                VerticalAlignment="Center"
                                                TextTrimming="CharacterEllipsis"
                                                MaxLines="1" />
-                                    <TextBlock Grid.Row="0" Grid.Column="5" Text="{Binding Duration}" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Row="0" Grid.Column="6" Text="{Binding Duration}" VerticalAlignment="Center" />
                                     <TextBlock Grid.Row="1"
-                                               Grid.Column="2"
+                                               Grid.Column="3"
                                                Grid.ColumnSpan="4"
                                                Text="{Binding Version}"
                                                Foreground="{DynamicResource TextSecondaryBrush}"

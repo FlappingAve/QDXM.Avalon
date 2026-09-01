@@ -21,8 +21,13 @@ public partial class SearchViewModel : ViewModelBase
     private const string ArtistAlbumsType = "Artist Albums";
     private const string LabelType = "Label";
     private const string LabelAlbumsType = "Label Albums";
+    private const string GenresType = "Genres";
     private const string NewestishSort = "Newest-ish";
     private const string RelevanceSort = "Relevance";
+    private const string BestSellersSort = "Best Sellers";
+    private const string MostAwardedSort = "Most Awarded";
+    private const string PriceAscendingSort = "Price: Low to High";
+    private const string NewestSort = "Newest";
     private const string UnarrangedArrange = "Unarranged";
     private const string ReleaseDateArrange = "Release Date";
     private const string LastUpdatedArrange = "Last Updated";
@@ -37,6 +42,8 @@ public partial class SearchViewModel : ViewModelBase
     private readonly SearchDownloadQueued? enqueueDownload;
     private readonly Action<PartialAlbumDownloadRequest>? enqueuePartialAlbum;
     private readonly Action<PartialPlaylistDownloadRequest>? enqueuePartialPlaylist;
+    private readonly Action? clearPreview;
+    private readonly Action<string>? clearPreviewContext;
     private readonly AppSettings settings;
     private readonly SearchResultFactory resultFactory;
     private readonly ISearchMemoryCleanupScheduler memoryCleanupScheduler;
@@ -55,7 +62,8 @@ public partial class SearchViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SearchPlaceholderText))]
-    [NotifyPropertyChangedFor(nameof(IsArtistAlbumSortVisible))]
+    [NotifyPropertyChangedFor(nameof(IsServerSortVisible))]
+    [NotifyPropertyChangedFor(nameof(IsResultsPerPageVisible))]
     private string selectedType = AlbumsType;
 
     [ObservableProperty]
@@ -97,16 +105,20 @@ public partial class SearchViewModel : ViewModelBase
         ArtistType,
         ArtistAlbumsType,
         LabelType,
-        LabelAlbumsType
+        LabelAlbumsType,
+        GenresType
     ];
-    public IReadOnlyList<string> SortOptions { get; } = [NewestishSort, RelevanceSort];
+    public IReadOnlyList<string> SortOptions => SelectedType == GenresType
+        ? [BestSellersSort, MostAwardedSort, PriceAscendingSort, NewestSort]
+        : [NewestishSort, RelevanceSort];
     public ObservableCollection<SearchResultViewModel> Results { get; } = [];
 
     public string ResultCountText => $"{Results.Count} results";
     public bool HasSelectedResult => SelectedResult is not null;
     public bool HasResults => Results.Count > 0;
     public bool ShowNoResults => HasSearched && !IsSearching && Results.Count == 0;
-    public bool IsArtistAlbumSortVisible => SelectedType == ArtistAlbumsType;
+    public bool IsServerSortVisible => SelectedType is ArtistAlbumsType or GenresType;
+    public bool IsResultsPerPageVisible => SelectedType != GenresType;
     public string SearchPlaceholderText => SelectedType switch
     {
         ArtistType => "Search an artist on Qobuz",
@@ -115,6 +127,7 @@ public partial class SearchViewModel : ViewModelBase
         LabelAlbumsType => "Enter label id, e.g. 12345 or id:12345",
         TracksType => "Search tracks on Qobuz or id:12345",
         PlaylistsType => "Search playlists on Qobuz",
+        GenresType => "Paste a Qobuz genre URL",
         _ => "Search Qobuz or id:12345"
     };
     public string DestinationPreview => SelectedResult is null
@@ -133,6 +146,7 @@ public partial class SearchViewModel : ViewModelBase
             }
 
             result.IsExpanded = false;
+            clearPreviewContext?.Invoke(result.PreviewContextKey);
             result.NotifyTrackSelectionChanged();
             collapsedSelectedResult |= ReferenceEquals(result, SelectedResult);
         }
@@ -155,6 +169,9 @@ public partial class SearchViewModel : ViewModelBase
         Action<PartialPlaylistDownloadRequest>? enqueuePartialPlaylist = null,
         AppLogService? logService = null,
         AppSettings? settings = null,
+        Func<PreviewTrackRequest, Task>? previewTrack = null,
+        Action? clearPreview = null,
+        Action<string>? clearPreviewContext = null,
         ISearchMemoryCleanupScheduler? memoryCleanupScheduler = null,
         Action? collectReleasedSearchMemory = null)
     {
@@ -162,6 +179,8 @@ public partial class SearchViewModel : ViewModelBase
         this.enqueueDownload = enqueueDownload;
         this.enqueuePartialAlbum = enqueuePartialAlbum;
         this.enqueuePartialPlaylist = enqueuePartialPlaylist;
+        this.clearPreview = clearPreview;
+        this.clearPreviewContext = clearPreviewContext;
         this.logService = logService ?? new AppLogService();
         this.settings = settings ?? new AppSettings();
         this.memoryCleanupScheduler = memoryCleanupScheduler ?? new BackgroundSearchMemoryCleanupScheduler();
@@ -174,7 +193,12 @@ public partial class SearchViewModel : ViewModelBase
             DownloadPrimaryAsync,
             DownloadSelectedAsync,
             SearchEntityAlbumsAsync,
+            DownloadTrackAlbumAsync,
+            OpenTrackAlbumAsync,
+            OpenTrackArtistAsync,
             HandleTrackSelectionChanged,
+            previewTrack,
+            clearPreviewContext,
             searchImageCache);
 
         UpdateLimitOptions();
@@ -193,6 +217,24 @@ public partial class SearchViewModel : ViewModelBase
     }
 
     public void RefreshSettingsPreview() => OnPropertyChanged(nameof(DestinationPreview));
+
+    public void UpdatePreviewPlaybackState(string activeTrackId, bool previewIsPlaying)
+    {
+        var updatedResults = new HashSet<SearchResultViewModel>();
+        foreach (var result in loadedResults)
+        {
+            result.UpdatePreviewState(activeTrackId, previewIsPlaying);
+            updatedResults.Add(result);
+        }
+
+        foreach (var result in Results)
+        {
+            if (updatedResults.Add(result))
+            {
+                result.UpdatePreviewState(activeTrackId, previewIsPlaying);
+            }
+        }
+    }
 
     partial void OnSelectedArrangeByChanged(SearchArrangeOptionView? value)
     {
@@ -218,12 +260,19 @@ public partial class SearchViewModel : ViewModelBase
     partial void OnSelectedTypeChanged(string value)
     {
         CancelActiveSearch();
-        OnPropertyChanged(nameof(IsArtistAlbumSortVisible));
+        OnPropertyChanged(nameof(IsServerSortVisible));
+        OnPropertyChanged(nameof(IsResultsPerPageVisible));
+        OnPropertyChanged(nameof(SortOptions));
+        SelectedSort = GetDefaultServerSort(value);
+        ApplyGenreUrlSortToSelectedSort();
         var resultType = ToSearchResultType();
-        var clampedLimit = SearchPageSizeOptions.ClampLimit(resultType, SelectedLimit);
-        if (SelectedLimit != clampedLimit)
+        if (resultType is not SearchResultType.Genres)
         {
-            SelectedLimit = clampedLimit;
+            var clampedLimit = SearchPageSizeOptions.ClampLimit(resultType, SelectedLimit <= 0 ? 25 : SelectedLimit);
+            if (SelectedLimit != clampedLimit)
+            {
+                SelectedLimit = clampedLimit;
+            }
         }
 
         UpdateLimitOptions();
@@ -249,6 +298,11 @@ public partial class SearchViewModel : ViewModelBase
     {
         nextOffset = 0;
         await SearchAsync(append: false);
+    }
+
+    partial void OnQueryChanged(string value)
+    {
+        ApplyGenreUrlSortToSelectedSort();
     }
 
     [RelayCommand]
@@ -289,7 +343,8 @@ public partial class SearchViewModel : ViewModelBase
                 ToSearchResultType(),
                 ToArtistAlbumSortOption(),
                 ToEffectiveLimit(),
-                nextOffset);
+                nextOffset,
+                ToGenreSortOption());
 
             if (!append)
             {
@@ -378,9 +433,22 @@ public partial class SearchViewModel : ViewModelBase
                 ThrowIfSearchStale(operationVersion, cancellationToken);
                 AppendLoadedPage(albums.Select(resultFactory.CreateAlbum));
             }
+            else if (options.Type is SearchResultType.Genres)
+            {
+                if (!QobuzGenreStorefrontUrl.TryParse(options.Query, out _))
+                {
+                    StatusText = "Enter a Qobuz genre URL";
+                    NotifyResultCountChanged();
+                    return;
+                }
+
+                var albums = await qobuzClient.SearchGenreAlbumsAsync(options, cancellationToken);
+                ThrowIfSearchStale(operationVersion, cancellationToken);
+                AppendLoadedPage(albums.Select(resultFactory.CreateAlbum));
+            }
 
             ThrowIfSearchStale(operationVersion, cancellationToken);
-            nextOffset += options.NormalizedLimit;
+            nextOffset += options.Type is SearchResultType.Genres ? 1 : options.NormalizedLimit;
             SelectedResult ??= Results.FirstOrDefault();
             HasSearched = true;
             StatusText = $"{Results.Count} results";
@@ -515,6 +583,7 @@ public partial class SearchViewModel : ViewModelBase
     private bool ClearCurrentResults()
     {
         var hadResults = Results.Count > 0 || loadedResults.Count > 0 || SelectedResult is not null;
+        clearPreview?.Invoke();
         ReleaseCurrentResultMemory();
         Results.Clear();
         loadedResults.Clear();
@@ -579,6 +648,7 @@ public partial class SearchViewModel : ViewModelBase
             }
 
             result.TotalDiscs = album.TotalDiscs;
+            result.UpdateTrackTotal(album.TotalTracks);
             result.NotifyAlbumTrackRowsChanged();
             OnResultActionCompleted(result, $"{result.Tracks.Count} tracks loaded");
         }
@@ -640,6 +710,78 @@ public partial class SearchViewModel : ViewModelBase
     {
         SelectedType = result.IsArtist ? ArtistAlbumsType : LabelAlbumsType;
         Query = result.Id;
+        SelectedResult = result;
+        nextOffset = 0;
+        await SearchAsync(append: false);
+    }
+
+    private async Task DownloadTrackAlbumAsync(SearchResultViewModel result)
+    {
+        if (qobuzClient is null)
+        {
+            OnResultActionCompleted(result, "Qobuz search is not configured. Log in first.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(result.AlbumId))
+        {
+            OnResultActionCompleted(result, "No source album ID is available for this track");
+            return;
+        }
+
+        try
+        {
+            var albumId = result.AlbumId.Trim();
+            var album = await qobuzClient.GetAlbumTracksAsync(albumId);
+            var albumResult = resultFactory.CreateAlbum(album);
+            var request = new DownloadRequest(
+                QobuzUrlBuilder.CreateOpenUrl(DownloadContentType.Album, albumId),
+                DownloadContentType.Album,
+                albumId);
+
+            enqueueDownload?.Invoke(request, albumResult);
+            OnResultActionCompleted(result, "Album queued");
+        }
+        catch (Exception ex)
+        {
+            OnResultActionCompleted(result, SafeErrorText.FormatUnexpectedFailure("Download album"));
+            logService.Error("Search", SafeErrorText.FormatUnexpectedLogMessage(ex));
+        }
+    }
+
+    private async Task OpenTrackAlbumAsync(SearchResultViewModel result)
+    {
+        if (string.IsNullOrWhiteSpace(result.AlbumId))
+        {
+            OnResultActionCompleted(result, "No source album ID is available for this track");
+            return;
+        }
+
+        SelectedType = AlbumsType;
+        Query = $"id:{result.AlbumId}";
+        SelectedResult = result;
+        nextOffset = 0;
+        await SearchAsync(append: false);
+    }
+
+    private async Task OpenTrackArtistAsync(SearchResultViewModel result)
+    {
+        if (!string.IsNullOrWhiteSpace(result.ArtistId))
+        {
+            SelectedType = ArtistAlbumsType;
+            Query = result.ArtistId.Trim();
+        }
+        else if (!string.IsNullOrWhiteSpace(result.Artist))
+        {
+            SelectedType = ArtistType;
+            Query = result.Artist;
+        }
+        else
+        {
+            OnResultActionCompleted(result, "No source artist is available for this track");
+            return;
+        }
+
         SelectedResult = result;
         nextOffset = 0;
         await SearchAsync(append: false);
@@ -720,6 +862,7 @@ public partial class SearchViewModel : ViewModelBase
             ArtistAlbumsType => SearchResultType.ArtistAlbums,
             LabelType => SearchResultType.Label,
             LabelAlbumsType => SearchResultType.LabelAlbums,
+            GenresType => SearchResultType.Genres,
             _ => SearchResultType.Albums
         };
     }
@@ -729,6 +872,17 @@ public partial class SearchViewModel : ViewModelBase
         return SelectedSort == RelevanceSort
             ? SearchArtistAlbumSortOption.Relevance
             : SearchArtistAlbumSortOption.Newestish;
+    }
+
+    private SearchGenreSortOption ToGenreSortOption()
+    {
+        return SelectedSort switch
+        {
+            MostAwardedSort => SearchGenreSortOption.MostAwarded,
+            PriceAscendingSort => SearchGenreSortOption.PriceAscending,
+            NewestSort => SearchGenreSortOption.Newest,
+            _ => SearchGenreSortOption.BestSellers
+        };
     }
 
     private SearchArrangeOption ToArrangeOption()
@@ -743,7 +897,10 @@ public partial class SearchViewModel : ViewModelBase
 
     private void UpdateLimitOptions()
     {
-        LimitOptions = SearchPageSizeOptions.ForType(ToSearchResultType());
+        var resultType = ToSearchResultType();
+        LimitOptions = resultType is SearchResultType.Genres
+            ? SearchPageSizeOptions.ForType(SearchResultType.Albums)
+            : SearchPageSizeOptions.ForType(resultType);
     }
 
     private void UpdateArrangeByOptions()
@@ -756,6 +913,33 @@ public partial class SearchViewModel : ViewModelBase
         SelectedArrangeBy = ArrangeByOptions.FirstOrDefault(option => option.Value == currentArrangeBy)
             ?? ArrangeByOptions.FirstOrDefault(option => option.Value == SearchArrangeOption.Unarranged)
             ?? CreateArrangeOption(SearchArrangeOption.Unarranged);
+    }
+
+    private void ApplyGenreUrlSortToSelectedSort()
+    {
+        if (SelectedType != GenresType ||
+            !QobuzGenreStorefrontUrl.TryParse(Query, out var genreUrl))
+        {
+            return;
+        }
+
+        SelectedSort = GetGenreSortLabel(genreUrl.Sort);
+    }
+
+    private static string GetDefaultServerSort(string selectedType)
+    {
+        return selectedType == GenresType ? BestSellersSort : NewestishSort;
+    }
+
+    private static string GetGenreSortLabel(SearchGenreSortOption option)
+    {
+        return option switch
+        {
+            SearchGenreSortOption.MostAwarded => MostAwardedSort,
+            SearchGenreSortOption.PriceAscending => PriceAscendingSort,
+            SearchGenreSortOption.Newest => NewestSort,
+            _ => BestSellersSort
+        };
     }
 
     private static SearchArrangeOptionView CreateArrangeOption(SearchArrangeOption option)

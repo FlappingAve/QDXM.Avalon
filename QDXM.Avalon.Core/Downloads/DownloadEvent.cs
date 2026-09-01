@@ -46,8 +46,15 @@ public sealed record DownloadCompletedEvent(string QueueItemId, bool HasWarnings
 public sealed record DownloadFailedEvent(
     string QueueItemId,
     string Message,
-    Exception? Exception = null)
+    Exception? Exception = null,
+    DownloadFailureKind Kind = DownloadFailureKind.General)
     : DownloadEvent(QueueItemId, DateTimeOffset.Now);
+
+public enum DownloadFailureKind
+{
+    General,
+    TrackUnavailable
+}
 
 public sealed record DownloadWarningEvent(
     string QueueItemId,

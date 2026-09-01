@@ -42,6 +42,7 @@ public static class SearchArrangeOptions
             SearchResultType.Tracks => TrackOptions,
             SearchResultType.Playlists => PlaylistOptions,
             SearchResultType.Artist or SearchResultType.Label => EntityOptions,
+            SearchResultType.Genres => [SearchArrangeOption.Unarranged],
             _ => [SearchArrangeOption.Unarranged]
         };
     }

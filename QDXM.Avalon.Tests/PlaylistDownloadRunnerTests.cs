@@ -518,6 +518,32 @@ public sealed class PlaylistDownloadRunnerTests
             message);
     }
 
+    [Theory]
+    [InlineData(false, false, DownloadFailureKind.TrackUnavailable)]
+    [InlineData(true, false, DownloadFailureKind.General)]
+    [InlineData(false, true, DownloadFailureKind.General)]
+    public void GetTerminalDownloadFailureKind_OnlyClassifiesCleanMissingUrlsAsUnavailable(
+        bool fileUrlLookupFailedWithException,
+        bool downloadWasAttempted,
+        DownloadFailureKind expected)
+    {
+        Assert.Equal(
+            expected,
+            QobuzDownloadJobRunner.GetTerminalDownloadFailureKind(
+                fileUrlLookupFailedWithException,
+                downloadWasAttempted));
+    }
+
+    [Fact]
+    public void GetUnavailableAlbumTrackWarningMessage_ExplainsSkippedAlbumOnlyTrack()
+    {
+        var message = QobuzDownloadJobRunner.GetUnavailableAlbumTrackWarningMessage(
+            new Track { Title = "End Of An Era" });
+
+        Assert.Contains("End Of An Era was skipped", message, StringComparison.Ordinal);
+        Assert.Contains("album-only", message, StringComparison.OrdinalIgnoreCase);
+    }
+
     [Fact]
     public void IsLocalFileFailure_DoesNotTreatNetworkIoAsLocalPathFailure()
     {
