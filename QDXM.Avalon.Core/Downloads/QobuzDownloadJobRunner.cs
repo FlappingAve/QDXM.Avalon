@@ -211,6 +211,8 @@ public sealed class QobuzDownloadJobRunner : IDownloadJobRunner, IDisposable
             destination,
             plannedFilePaths);
 
+        var hasWarnings = false;
+        var unavailableTrackCount = 0;
         var coverArt = await coverArtDownloadService.DownloadAsync(
             album.Image,
             albumSearch.ThumbnailUrl,
@@ -219,18 +221,19 @@ public sealed class QobuzDownloadJobRunner : IDownloadJobRunner, IDisposable
             saveFolderCover: ShouldSaveStandardFolderCover(jobSettings));
         if (!string.IsNullOrWhiteSpace(coverArt.WarningMessage))
         {
+            hasWarnings = true;
             yield return new DownloadWarningEvent(item.Id, coverArt.WarningMessage);
         }
 
         var coverArtPath = coverArt.Path;
         var completed = Math.Clamp(item.CompletedTracks, 0, orderedTracks.Count);
-        var hasWarnings = false;
         try
         {
             foreach (var track in orderedTracks.Skip(completed))
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var trackFailed = false;
+                DownloadFailedEvent? unavailableTrackFailure = null;
                 var nextCompletedCount = completed + 1;
 
                 await foreach (var downloadEvent in DownloadTrackFileAsync(
@@ -245,9 +248,32 @@ public sealed class QobuzDownloadJobRunner : IDownloadJobRunner, IDisposable
                     jobSettings,
                     cancellationToken))
                 {
+                    if (downloadEvent is DownloadFailedEvent { Kind: DownloadFailureKind.TrackUnavailable } unavailable)
+                    {
+                        unavailableTrackFailure = unavailable;
+                        continue;
+                    }
+
                     yield return downloadEvent;
                     trackFailed = trackFailed || downloadEvent is DownloadFailedEvent;
                     hasWarnings = hasWarnings || downloadEvent is DownloadWarningEvent;
+                }
+
+                if (unavailableTrackFailure is not null)
+                {
+                    unavailableTrackCount++;
+                    hasWarnings = true;
+                    yield return new DownloadWarningEvent(
+                        item.Id,
+                        GetUnavailableAlbumTrackWarningMessage(track),
+                        unavailableTrackFailure.Exception);
+                    yield return new TrackCompletedEvent(
+                        item.Id,
+                        nextCompletedCount,
+                        tracksToDownload.Count,
+                        string.Empty);
+                    completed = nextCompletedCount;
+                    continue;
                 }
 
                 if (trackFailed)
@@ -256,6 +282,14 @@ public sealed class QobuzDownloadJobRunner : IDownloadJobRunner, IDisposable
                 }
 
                 completed = nextCompletedCount;
+            }
+
+            if (unavailableTrackCount > 0)
+            {
+                var trackText = unavailableTrackCount == 1 ? "track was" : "tracks were";
+                yield return new DownloadWarningEvent(
+                    item.Id,
+                    $"{unavailableTrackCount} album {trackText} skipped because Qobuz did not provide an audio file URL. See Logs.");
             }
 
             hasWarnings = hasWarnings || (jobSettings.DownloadGoodies && !await DownloadBookletsAsync(album, destination, cancellationToken));
@@ -1119,6 +1153,8 @@ public sealed class QobuzDownloadJobRunner : IDownloadJobRunner, IDisposable
             var candidateFormatIds = GetDownloadCandidateFormatIds(jobSettings);
             var plannedTrackQuality = ResolveTrackContext(track, jobSettings).Quality;
             var lastFailureMessage = string.Empty;
+            var fileUrlLookupFailedWithException = false;
+            var downloadWasAttempted = false;
             foreach (var candidateFormatId in candidateFormatIds)
             {
                 FileUrl? fileUrl = null;
@@ -1133,6 +1169,7 @@ public sealed class QobuzDownloadJobRunner : IDownloadJobRunner, IDisposable
                 }
                 catch (Exception ex)
                 {
+                    fileUrlLookupFailedWithException = true;
                     candidateFailureMessage = $"{QualityStringMappings.GetCandidateQualityLabel(candidateFormatId)} file URL lookup failed for {trackTitle}: {ex.Message}";
                 }
 
@@ -1143,6 +1180,7 @@ public sealed class QobuzDownloadJobRunner : IDownloadJobRunner, IDisposable
                 }
 
                 var stream = ResolveDownloadStream(fileUrl, candidateFormatId);
+                downloadWasAttempted = true;
                 var filePath = resolvedFilePathFactory?.Invoke(stream) ??
                     GetTrackFilePath(
                         destination,
@@ -1299,7 +1337,8 @@ public sealed class QobuzDownloadJobRunner : IDownloadJobRunner, IDisposable
                 item.Id,
                 string.IsNullOrWhiteSpace(lastFailureMessage)
                     ? $"Qobuz did not return a file URL for {trackTitle}. The track may be unavailable in your region/account or not included in your subscription."
-                    : $"{lastFailureMessage} No configured fallback quality succeeded.");
+                    : $"{lastFailureMessage} No configured fallback quality succeeded.",
+                Kind: GetTerminalDownloadFailureKind(fileUrlLookupFailedWithException, downloadWasAttempted));
         }
         finally
         {
@@ -1811,6 +1850,22 @@ public sealed class QobuzDownloadJobRunner : IDownloadJobRunner, IDisposable
         return stream.Quality.FormatId == QualityStringMappings.Mp3FormatId
             ? $"{trackTitle} fell back to {stream.Quality.DisplayQuality} after no FLAC stream succeeded."
             : $"{trackTitle} quality was reduced to {stream.Quality.DisplayQuality} after the requested FLAC stream failed.";
+    }
+
+    internal static DownloadFailureKind GetTerminalDownloadFailureKind(
+        bool fileUrlLookupFailedWithException,
+        bool downloadWasAttempted)
+    {
+        return !fileUrlLookupFailedWithException && !downloadWasAttempted
+            ? DownloadFailureKind.TrackUnavailable
+            : DownloadFailureKind.General;
+    }
+
+    internal static string GetUnavailableAlbumTrackWarningMessage(Track track)
+    {
+        var trackTitle = QobuzTitleFormatter.TrackTitle(track.Title, "Untitled");
+        return $"{trackTitle} was skipped because Qobuz did not provide an audio file URL for any configured quality. " +
+            "The track may be album-only or unavailable for this account or region.";
     }
 
     internal static string GetDownloadFailureMessage(
